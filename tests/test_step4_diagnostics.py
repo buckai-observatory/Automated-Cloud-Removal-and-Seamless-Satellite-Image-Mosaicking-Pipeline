@@ -135,3 +135,21 @@ def test_stop_signals_are_not_swallowed(step4, cloud_run, monkeypatch, stage, si
         monkeypatch.setattr(step4, "glob", SimpleNamespace(glob=stop))
     with pytest.raises(signal, match="stop requested"):
         step4.main()
+
+
+def test_main_closes_every_dataset_it_opens(step4, cloud_run, monkeypatch):
+    # Open handles stop the cldDatabase clean-up from deleting files on Windows.
+    cloud_run.write("masks/A0000001.tif", np.ones((64, 64), np.uint8))
+    cloud_run.write("pan/A0000002.tif", cloud_run.mosaic[0])
+    opened = []
+    real_open = rasterio.open
+
+    def tracking_open(*args, **kwargs):
+        dataset = real_open(*args, **kwargs)
+        opened.append(dataset)
+        return dataset
+
+    monkeypatch.setattr(rasterio, "open", tracking_open)
+    step4.main()
+    assert opened
+    assert [dataset.name for dataset in opened if not dataset.closed] == []

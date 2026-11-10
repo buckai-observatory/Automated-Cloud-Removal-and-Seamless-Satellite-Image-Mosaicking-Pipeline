@@ -102,16 +102,16 @@ def score_candidates(candidate_files, cloud_files, candidate_folder, cloud_folde
     for a, j in enumerate(cloud_files):
         with rasterio.open(join(cloud_folder, j)) as cld_ds:
             cld_gt=cld_ds.transform
-            cldWin=Window(((cld_gt[2]-mosaic_origin[0])/res if (cld_gt[2]-mosaic_origin[0])/res>0 else (cld_gt[2]-mosaic_origin[0])/res ),((mosaic_origin[1]-cld_gt[5])/res if (mosaic_origin[1]-cld_gt[5])/res>0 else (mosaic_origin[1]-cld_gt[5])/res ), width=cld_ds.width ,height=cld_ds.height  )   #full cld mask
-            cldWin6m=Window(((cld_gt[2]-mask_origin[0])/res if (cld_gt[2]-mask_origin[0])/res>0 else (cld_gt[2]-mask_origin[0])/res ),((mask_origin[1]-cld_gt[5])/res if (mask_origin[1]-cld_gt[5])/res>0 else (mask_origin[1]-cld_gt[5])/res ), width=cld_ds.width ,height=cld_ds.height  )   #full cld mask
+            cldWin=Window((cld_gt[2]-mosaic_origin[0])/res,(mosaic_origin[1]-cld_gt[5])/res, width=cld_ds.width ,height=cld_ds.height  )   #full cld mask
+            cldWin6m=Window((cld_gt[2]-mask_origin[0])/res,(mask_origin[1]-cld_gt[5])/res, width=cld_ds.width ,height=cld_ds.height  )   #full cld mask
 
             for b, k in enumerate(candidate_files):
                 with rasterio.open(join(candidate_folder, k)) as imagePool:
 
                     gt1=imagePool.transform
 
-                    imgWin=Window(((gt1[2]-mosaic_origin[0])/res if (gt1[2]-mosaic_origin[0])/res>0 else (gt1[2]-mosaic_origin[0])/res ),((mosaic_origin[1]-gt1[5])/res if (mosaic_origin[1]-gt1[5])/res>0 else (mosaic_origin[1]-gt1[5])/res ),  width=imagePool.width ,height=imagePool.height  )
-                    tw6mWin=Window(((gt1[2]-mask_origin[0])/res if (gt1[2]-mask_origin[0])/res>0 else (gt1[2]-mask_origin[0])/res ),((mask_origin[1]-gt1[5])/res if (mask_origin[1]-gt1[5])/res>0 else (mask_origin[1]-gt1[5])/res ),  width=imagePool.width ,height=imagePool.height  )
+                    imgWin=Window((gt1[2]-mosaic_origin[0])/res,(mosaic_origin[1]-gt1[5])/res,  width=imagePool.width ,height=imagePool.height  )
+                    tw6mWin=Window((gt1[2]-mask_origin[0])/res,(mask_origin[1]-gt1[5])/res,  width=imagePool.width ,height=imagePool.height  )
 
                     try:
 
@@ -195,17 +195,15 @@ def main():
     my_file = open('ProcessOrder.txt', "r")
     ReadOrder =  my_file.read().split(",")
     my_file.close()
-    cloudmask=rasterio.open(cloudmask_path,'r+')
-    cloudmask_transform=cloudmask.transform
+    with rasterio.open(cloudmask_path) as cloudmask:
+        cloudmask_transform=cloudmask.transform
     allWindow = np.load('allWindow.npy',allow_pickle=True)
     cd1 = np.load('transform.npy',allow_pickle=True)
 
     # Statistics counters
     Count=0
     total=0
-    stage1=0
     stage2=0
-    stage3=0
     delnum=0
     cldzeroNum=0
     zeroNum=0
@@ -223,8 +221,8 @@ def main():
     for i in range(len(ReadOrder)-1):
 
         #read cloudmask corresponding to allwindow.
-        cloudmask=rasterio.open(cloudmask_path,'r+')
-        cldRdbineary0=cloudmask.read(1,window=allWindow[i])
+        with rasterio.open(cloudmask_path) as cloudmask:
+            cldRdbineary0=cloudmask.read(1,window=allWindow[i])
         cldRdbineary=cldRdbineary0.copy()
         cldRdbineary[cldRdbineary0!=1]=0
 
@@ -307,10 +305,10 @@ def main():
             for f in files:
               fullpath1 = join(candidate_img_path, f)
               if isfile(fullpath1) and  f.endswith(".img"):
-                image=rasterio.open(candidate_img_path+os.sep+f)
-                file.append(f)
-                gt_two.append(image.transform[2] )
-                gt_five.append(image.transform[5] )
+                with rasterio.open(candidate_img_path+os.sep+f) as image:
+                    file.append(f)
+                    gt_two.append(image.transform[2] )
+                    gt_five.append(image.transform[5] )
 
 
         files = listdir(cloud_work_path)
@@ -320,7 +318,6 @@ def main():
           if isfile(fullpath) and  f.endswith(".img"):
             cldfile.append(f)
         if not cldfile:
-            cloudmask.close()
             continue
         mosaic_xs= rasterio.open(mosaic_xs_path)
         mosaic_origin=mosaic_xs.transform[2],mosaic_xs.transform[5]
@@ -335,427 +332,228 @@ def main():
         print('cloud removal...',i+1,'/',len(allWindow))
         for j in cldfile:
 
-            cld_ds = rasterio.open(cloud_work_path+os.sep+j)
-            cld_gt=cld_ds.transform
+            with rasterio.open(cloud_work_path+os.sep+j) as cld_ds:
+                cld_gt=cld_ds.transform
 
-            cldWin=Window(((cld_gt[2]-mosaic_origin[0])/res if (cld_gt[2]-mosaic_origin[0])/res>0 else (cld_gt[2]-mosaic_origin[0])/res ),((mosaic_origin[1]-cld_gt[5])/res if (mosaic_origin[1]-cld_gt[5])/res>0 else (mosaic_origin[1]-cld_gt[5])/res ), width=cld_ds.width ,height=cld_ds.height  )
-            cldWin6m=Window(((cld_gt[2]-mask_origin[0])/res if (cld_gt[2]-mask_origin[0])/res>0 else (cld_gt[2]-mask_origin[0])/res ),((mask_origin[1]-cld_gt[5])/res if (mask_origin[1]-cld_gt[5])/res>0 else (mask_origin[1]-cld_gt[5])/res ), width=cld_ds.width ,height=cld_ds.height  )   #full cld mask
+                cldWin=Window((cld_gt[2]-mosaic_origin[0])/res,(mosaic_origin[1]-cld_gt[5])/res, width=cld_ds.width ,height=cld_ds.height  )
+                cldWin6m=Window((cld_gt[2]-mask_origin[0])/res,(mask_origin[1]-cld_gt[5])/res, width=cld_ds.width ,height=cld_ds.height  )   #full cld mask
 
-            PancldWin=Window((cld_gt[2]-pan_origin[0])/pan_res ,(pan_origin[1]-cld_gt[5])/pan_res , width=cld_ds.width*(res/pan_res) ,height=cld_ds.height*(res/pan_res)  )
+                PancldWin=Window((cld_gt[2]-pan_origin[0])/pan_res ,(pan_origin[1]-cld_gt[5])/pan_res , width=cld_ds.width*(res/pan_res) ,height=cld_ds.height*(res/pan_res)  )
 
-            TaicldWin=Window(((cld_gt[2]-cloudmask_transform[2])/res if (cld_gt[2]-cloudmask_transform[2])/res>0 else (cld_gt[2]-cloudmask_transform[2])/res ),((cloudmask_transform[5]-cld_gt[5])/res if (cloudmask_transform[5]-cld_gt[5])/res>0 else (cloudmask_transform[5]-cld_gt[5])/res ), width=cld_ds.width ,height=cld_ds.height  )  #big cld mask
-
-
-            ssimIndex=np.argsort(ssim[:,a])
-            a+=1
-            ss=0
-            for s in list(range(1,np.count_nonzero(ssim[:,a-1]>=ssim_threshold)+1)):
-                if ss==0:
-                    if ssim[ssimIndex[-s],a-1]>= ssim_threshold:#set threshold to filter not good enough img.
-
-                        fName=file[ssimIndex[-s]]
-
-                        imagePool= rasterio.open(candidate_img_path+os.sep+fName)
-
-                        gt1=imagePool.transform
-
-                        imgWin=Window(((gt1[2]-mosaic_origin[0])/res if (gt1[2]-mosaic_origin[0])/res>0 else (gt1[2]-mosaic_origin[0])/res ),((mosaic_origin[1]-gt1[5])/res if (mosaic_origin[1]-gt1[5])/res>0 else (mosaic_origin[1]-gt1[5])/res ),  width=imagePool.width ,height=imagePool.height  )
-                        tw6mWin=Window(((gt1[2]-mask_origin[0])/res if (gt1[2]-mask_origin[0])/res>0 else (gt1[2]-mask_origin[0])/res ),((mask_origin[1]-gt1[5])/res if (mask_origin[1]-gt1[5])/res>0 else (mask_origin[1]-gt1[5])/res ),  width=imagePool.width ,height=imagePool.height  )
-
-                        imgWin_tai=Window(((gt1[2]-cloudmask_transform[2])/res if (gt1[2]-cloudmask_transform[2])/res>0 else (gt1[2]-cloudmask_transform[2])/res ),((cloudmask_transform[5]-gt1[5])/res if (cloudmask_transform[5]-gt1[5])/res>0 else (cloudmask_transform[5]-gt1[5])/res ),  width=imagePool.width ,height=imagePool.height  )#big cld mask
+                TaicldWin=Window((cld_gt[2]-cloudmask_transform[2])/res,(cloudmask_transform[5]-cld_gt[5])/res, width=cld_ds.width ,height=cld_ds.height  )  #big cld mask
 
 
-                        try:
+                ssimIndex=np.argsort(ssim[:,a])
+                a+=1
+                ss=0
+                for s in list(range(1,np.count_nonzero(ssim[:,a-1]>=ssim_threshold)+1)):
+                    if ss==0:
+                        if ssim[ssimIndex[-s],a-1]>= ssim_threshold:#set threshold to filter not good enough img.
 
-                            ints_window=windows.intersection(imgWin, cldWin)  #big taiwan
-                            ints_window_tw6m=windows.intersection(tw6mWin, cldWin6m)  #tw6m
-                            ints_window_TaicldWin=windows.intersection(imgWin_tai, TaicldWin) #big cld mask
-                            write_window= Window(abs(imgWin.col_off-ints_window.col_off), abs(ints_window.row_off-imgWin.row_off), height= ints_window.height , width=ints_window.width)
-                            cld_window=Window(abs(cldWin.col_off-ints_window.col_off), abs(ints_window.row_off-cldWin.row_off), height= ints_window.height , width=ints_window.width)
+                            fName=file[ssimIndex[-s]]
 
-                            cld= cld_ds.read(1,window=cld_window)
+                            with rasterio.open(candidate_img_path+os.sep+fName) as imagePool:
 
-                            # If 1 exists in border; then skip the cld file.
-                            if np.any(border_elems_generic(cld,1)==1)==False:# to prevent replicated cld mask from reprocessing several times.
+                                gt1=imagePool.transform
 
-                                cldbList=glob.glob(''.join(str(pathlib.Path().absolute()))+os.sep+cloud_mask_folder+os.sep+'*'+fName[:-4]+'*.tif')
-                                if not cldbList:
-                                    raise FileNotFoundError(f"No candidate cloud mask for {fName} in {cloud_mask_folder}")
-                                cldb=rasterio.open(cldbList[0])
-                                cldb=cldb.read(1,window=write_window)
-                                # Zero is a valid clear mask value: count every cloud-patch pixel.
-                                patch_codes = cldb[cld==1]
-                                clear_fraction = (np.count_nonzero(patch_codes < 10) / patch_codes.size
-                                                  if patch_codes.size else 0.0)
+                                imgWin=Window((gt1[2]-mosaic_origin[0])/res,(mosaic_origin[1]-gt1[5])/res,  width=imagePool.width ,height=imagePool.height  )
+                                tw6mWin=Window((gt1[2]-mask_origin[0])/res,(mask_origin[1]-gt1[5])/res,  width=imagePool.width ,height=imagePool.height  )
 
-                                imgrgb=imagePool.read(window=write_window)
-
-                                thresh=1-cloud_tolerance
-                                if ssim[ssimIndex[-1],a-1]==-0.91 and  np.any(imgrgb[0,:,:][cld==1]==0)==False and clear_fraction>0.85 :
-                                    cldcy=cld.copy()
-                                    blendPix=65
-                                    cldcy[np.where(cld==1)]=(blendPix+1)
-                                    try:
-                                        mask_blurred  = cv2.GaussianBlur(cldcy,(blendPix,blendPix),0)
-                                    except cv2.error:
-                                        blendPix=35
-                                        cldcy=cld.copy()
-                                        cldcy[np.where(cld==1)]=(blendPix+1)
-                                        mask_blurred  = cv2.GaussianBlur(cldcy,(blendPix,blendPix),0)
-                                    if np.any(mask_blurred[0,:]!=0) or np.any(mask_blurred[-1,:]!=0) or np.any(mask_blurred[:,0]!=0) or np.any(mask_blurred[:,-1]!=0):
-                                        blendPix=25
-                                        cldcy=cld.copy()
-                                        cldcy[np.where(cld==1)]=(blendPix+1)
-                                        mask_blurred  = cv2.GaussianBlur(cldcy,(blendPix,blendPix),0)
-                                    mask_blurred_3chan = cv2.cvtColor(mask_blurred, cv2.COLOR_GRAY2BGR).astype('float32') / (blendPix+1)
-                                    mask_blurred_4chan = np.concatenate( [mask_blurred_3chan,mask_blurred[...,None]/(blendPix+1)], axis=2)
-                                    mask_blurred_4chan.astype('float32')
-
-                                    mask_blurred_4chan=np.moveaxis(mask_blurred_4chan, [0, 1, 2], [1, 2, 0])
-
-                                    tw6mMask=land_sea_mask.read(1,window=ints_window_tw6m)
-                                    out = 255 * np.zeros(mosaic_rgb.shape)
-                                    temp=cldb.copy()
-                                    temp[cld==0]=1
-                                    temp[temp<=2]=1
-                                    temp[temp>10]=10
-                                    kernel = np.ones((10,10), np.uint8)
-                                    temp = cv2.dilate(temp, kernel, iterations = 1)
-                                    h, w = temp.shape[:2]
-                                    mask = np.zeros((h+2, w+2), np.uint8)
-                                    cv2.floodFill(temp, mask, (1,1), 0)
-                                    temp[temp!=0]=1
-
-                                    mosaic_xs= rasterio.open(mosaic_xs_path)
-
-                                    mosaic_rgb=mosaic_xs.read(window=ints_window)
-                                    outcome=mosaic_rgb.astype(imgtype) *(1- mask_blurred_4chan)+ imgrgb.astype(imgtype) *( mask_blurred_4chan)
-                                    stage1+=1
-
-                                    Count+=1
-                                    outcome=outcome.astype(imgtype)
-
-                                    with rasterio.open(mosaic_xs_path, 'r+') as dst:
-                                        dst.write(outcome,  window=ints_window)
-                                    mosaic_xs.close()
-
-                                    cloudmask=rasterio.open(cloudmask_path,'r+')
-                                    taicld=cloudmask.read(1,window=ints_window_TaicldWin)
-                                    taicld[np.where((cld==1) & (temp==0) & (tw6mMask==1))]=0
-                                    taicld[np.where( (temp==1) & (tw6mMask==1) ) ]=(i+1)*10
-                                    cloudmask.close()
-                                    with rasterio.open(cloudmask_path, 'r+') as dst:
-                                        dst.write(taicld.astype(imgtype),1,  window=ints_window_TaicldWin)
-
-                                    #resize cldb mask to pan's res
-                                    mask_blurred_pan_chan=cv2.resize( mask_blurred_4chan[1,:,:],(int(mask_blurred_4chan[1,:,:].shape[1]*(res/pan_res)),int(mask_blurred_4chan[1,:,:].shape[0]*(res/pan_res))) ,interpolation=cv2.INTER_NEAREST)
+                                imgWin_tai=Window((gt1[2]-cloudmask_transform[2])/res,(cloudmask_transform[5]-gt1[5])/res,  width=imagePool.width ,height=imagePool.height  )#big cld mask
 
 
-                                    #read big pan which is cldb mask's counterpart
-                                    with rasterio.open( mosaic_xs_path) as src:
+                                try:
 
-                                        win_transform = src.window_transform(ints_window)
-                                        panBounds=from_bounds(win_transform[2], win_transform[5]-ints_window.height*res, win_transform[2]+ints_window.width*res, win_transform[5], src.transform)
-                                    mosaic_pan= rasterio.open( mosaic_pan_path,'r+')
-                                    bigpan = mosaic_pan.read(1 ,window=from_bounds(win_transform[2], win_transform[5]-ints_window.height*res, win_transform[2]+ints_window.width*res, win_transform[5], mosaic_pan.transform))
-                                    mosaic_pan.close()
+                                    ints_window=windows.intersection(imgWin, cldWin)  #big taiwan
+                                    ints_window_tw6m=windows.intersection(tw6mWin, cldWin6m)  #tw6m
+                                    ints_window_TaicldWin=windows.intersection(imgWin_tai, TaicldWin) #big cld mask
+                                    write_window= Window(abs(imgWin.col_off-ints_window.col_off), abs(ints_window.row_off-imgWin.row_off), height= ints_window.height , width=ints_window.width)
+                                    cld_window=Window(abs(cldWin.col_off-ints_window.col_off), abs(ints_window.row_off-cldWin.row_off), height= ints_window.height , width=ints_window.width)
 
+                                    cld= cld_ds.read(1,window=cld_window)
 
-                                    #read pan_imagePool which is cldb mask's counterpart
-                                    PAN_fName=fName[0]+str(int(fName[fName.find('0'):fName.find('0')+7])+1).zfill(7)
-                                    pan_imagePool = rasterio.open(pan_scene_path(Pan_Addr, PAN_fName))
+                                    # If 1 exists in border; then skip the cld file.
+                                    if np.any(border_elems_generic(cld,1)==1)==False:# to prevent replicated cld mask from reprocessing several times.
 
-                                    smallpan=pan_imagePool.read(1,window= from_bounds(win_transform[2], win_transform[5]-ints_window.height*res, win_transform[2]+ints_window.width*res, win_transform[5], pan_imagePool.transform))
-                                    pan_imagePool.close()
-                                    outcome=(smallpan.astype(imgtype) * mask_blurred_pan_chan + bigpan.astype(imgtype) *( 1-mask_blurred_pan_chan) ).astype(imgtype)
-                                    with rasterio.open( mosaic_pan_path,'r+') as dst:
-                                        dst.write( outcome, 1, window= from_bounds(win_transform[2], win_transform[5]-ints_window.height*res, win_transform[2]+ints_window.width*res, win_transform[5], dst.transform ) )
-                                    del outcome,smallpan,bigpan
-                                    ss=1
+                                        cldbList=glob.glob(''.join(str(pathlib.Path().absolute()))+os.sep+cloud_mask_folder+os.sep+'*'+fName[:-4]+'*.tif')
+                                        if not cldbList:
+                                            raise FileNotFoundError(f"No candidate cloud mask for {fName} in {cloud_mask_folder}")
+                                        with rasterio.open(cldbList[0]) as cldb_ds:
+                                            cldb=cldb_ds.read(1,window=write_window)
+                                        # Zero is a valid clear mask value: count every cloud-patch pixel.
+                                        patch_codes = cldb[cld==1]
+                                        clear_fraction = (np.count_nonzero(patch_codes < 10) / patch_codes.size
+                                                          if patch_codes.size else 0.0)
 
-                                elif np.any(imgrgb[0,:,:][cld==1]==0)==False and clear_fraction>thresh : #(cldb[cld==1]<10).all()==True   #cldb.all()<10
-                                    mosaic_xs= rasterio.open(mosaic_xs_path)
-                                    if np.count_nonzero(cld)==2000000:
-                                        cldcy=cld.copy()
-                                        blendPix=65
-                                        cldcy[np.where(cld==1)]=(blendPix+1)
-                                        try:
-                                            mask_blurred  = cv2.GaussianBlur(cldcy,(blendPix,blendPix),0)
-                                        except cv2.error:
-                                            blendPix=35
-                                            cldcy=cld.copy()
-                                            cldcy[np.where(cld==1)]=(blendPix+1)
-                                            mask_blurred  = cv2.GaussianBlur(cldcy,(blendPix,blendPix),0)
-                                        if np.any(mask_blurred[0,:]!=0) or np.any(mask_blurred[-1,:]!=0) or np.any(mask_blurred[:,0]!=0) or np.any(mask_blurred[:,-1]!=0):
-                                            blendPix=25
-                                            cldcy=cld.copy()
-                                            cldcy[np.where(cld==1)]=(blendPix+1)
-                                            mask_blurred  = cv2.GaussianBlur(cldcy,(blendPix,blendPix),0)
-                                        mask_blurred_3chan = cv2.cvtColor(mask_blurred, cv2.COLOR_GRAY2BGR).astype('float32') / (blendPix+1)
-                                        mask_blurred_4chan = np.concatenate( [mask_blurred_3chan,mask_blurred[...,None]/(blendPix+1)], axis=2)
-                                        mask_blurred_4chan.astype('float32')
+                                        imgrgb=imagePool.read(window=write_window)
 
-                                        mask_blurred_4chan=np.moveaxis(mask_blurred_4chan, [0, 1, 2], [1, 2, 0])
+                                        thresh=1-cloud_tolerance
+                                        if np.any(imgrgb[0,:,:][cld==1]==0)==False and clear_fraction>thresh : #(cldb[cld==1]<10).all()==True   #cldb.all()<10
+                                            mosaic_xs= rasterio.open(mosaic_xs_path)
+                                            code=0
+                                            imgrgb=imagePool.read(window=write_window)/imgBits
+                                            mosaic_rgb=mosaic_xs.read(window=ints_window)/imgBits
 
-                                        mosaic_rgb=mosaic_xs.read(window=ints_window)
-                                        outcome=mosaic_rgb.astype(imgtype) *(1- mask_blurred_4chan)+ imgrgb.astype(imgtype) *( mask_blurred_4chan)
+                                            tw6mMask=land_sea_mask.read(1,window=ints_window_tw6m)
 
-                                    else:
-                                        code=0
-                                        imgrgb=imagePool.read(window=write_window)/imgBits
-                                        mosaic_rgb=mosaic_xs.read(window=ints_window)/imgBits
+                                            out = 255 * np.zeros(mosaic_rgb.shape)
 
-                                        tw6mMask=land_sea_mask.read(1,window=ints_window_tw6m)
+                                            temp=cldb.copy()
+                                            temp[cld==0]=1
+                                            temp[temp<=2]=1
+                                            temp[temp>10]=10
+                                            kernel = np.ones((10,10), np.uint8)
+                                            temp = cv2.dilate(temp, kernel, iterations = 1)
 
-                                        out = 255 * np.zeros(mosaic_rgb.shape)
+                                            h, w = temp.shape[:2]
+                                            mask = np.zeros((h+2, w+2), np.uint8)
+                                            cv2.floodFill(temp, mask, (1,1), 0)
+                                            temp[temp!=0]=1
 
-                                        temp=cldb.copy()
-                                        temp[cld==0]=1
-                                        temp[temp<=2]=1
-                                        temp[temp>10]=10
-                                        kernel = np.ones((10,10), np.uint8)
-                                        temp = cv2.dilate(temp, kernel, iterations = 1)
+                                            # find center
+                                            br = cv2.boundingRect(cld) # bounding rect (x,y,width,height)
+                                            centerOfBR = (br[0] + br[2] // 2, br[1] + br[3] // 2)
 
-                                        h, w = temp.shape[:2]
-                                        mask = np.zeros((h+2, w+2), np.uint8)
-                                        cv2.floodFill(temp, mask, (1,1), 0)
-                                        temp[temp!=0]=1
+                                            centerOfBRn=list(centerOfBR)
+                                            if  br[0] + br[2] == cld.shape[1]:
+                                                centerOfBRn[0]=centerOfBRn[0]-1
+                                                print('right:', 'loop:',i,'; cld_temp:',j,'; fName:', fName )
+                                                right+=1
+                                            if br[1] == 0:
+                                                centerOfBRn[1]=centerOfBRn[1]+1
+                                                print('up:', 'loop:',i,'; cld_temp:',j ,'; fName:', fName)
+                                                up+=1
+                                            if br[0] == 0:
+                                                print('left:', 'loop:',i,'; cld_temp:',j,'; fName:', fName )
+                                                left+=1
+                                            if br[1] + br[3] == cld.shape[0]:
+                                                centerOfBRn[1]=centerOfBRn[1]-1
+                                                print('low:', 'loop:',i,'; cld_temp:',j ,'; fName:', fName)
+                                                low+=1
+                                            centerOfBR=tuple(centerOfBRn)
 
-                                        # find center
-                                        br = cv2.boundingRect(cld) # bounding rect (x,y,width,height)
-                                        centerOfBR = (br[0] + br[2] // 2, br[1] + br[3] // 2)
+                                            for h  in [1,0]:
+                                                mosaic_rgb1=mosaic_rgb[h:h+3,:,:].astype('uint8')
+                                                imgrgb1=imgrgb[h:h+3,:,:].astype('uint8')
 
-                                        centerOfBRn=list(centerOfBR)
-                                        if  br[0] + br[2] == cld.shape[1]:
-                                            centerOfBRn[0]=centerOfBRn[0]-1
-                                            print('right:', 'loop:',i,'; cld_temp:',j,'; fName:', fName )
-                                            right+=1
-                                        if br[1] == 0:
-                                            centerOfBRn[1]=centerOfBRn[1]+1
-                                            print('up:', 'loop:',i,'; cld_temp:',j ,'; fName:', fName)
-                                            up+=1
-                                        if br[0] == 0:
-                                            print('left:', 'loop:',i,'; cld_temp:',j,'; fName:', fName )
-                                            left+=1
-                                        if br[1] + br[3] == cld.shape[0]:
-                                            centerOfBRn[1]=centerOfBRn[1]-1
-                                            print('low:', 'loop:',i,'; cld_temp:',j ,'; fName:', fName)
-                                            low+=1
-                                        centerOfBR=tuple(centerOfBRn)
+                                                imgrgb2=np.moveaxis(imgrgb1, [0, 1, 2], [2, 0, 1]).astype('uint8')
+                                                mosaic_rgb2=np.moveaxis(mosaic_rgb1, [0, 1, 2], [2, 0, 1]).astype('uint8')
+                                                imgrgb2[tw6mMask==0,:]=0
+                                                nodata=np.all(mosaic_rgb[h:h+3,:,:]==0, axis=0) # outside every scene
 
-                                        for h  in [1,0]:
-                                            mosaic_rgb1=mosaic_rgb[h:h+3,:,:].astype('uint8')
-                                            imgrgb1=imgrgb[h:h+3,:,:].astype('uint8')
+                                                imgrgb2[temp==1,:]=0
+                                                mosaic_rgb2[temp==1,:]=0
+                                                cld[cld==1]=255
+                                                mixed_clone = seamless_clone_over_nodata( imgrgb2, mosaic_rgb2, cld, centerOfBR, nodata)
 
-                                            imgrgb2=np.moveaxis(imgrgb1, [0, 1, 2], [2, 0, 1]).astype('uint8')
-                                            mosaic_rgb2=np.moveaxis(mosaic_rgb1, [0, 1, 2], [2, 0, 1]).astype('uint8')
-                                            imgrgb2[tw6mMask==0,:]=0
-                                            nodata=np.all(mosaic_rgb[h:h+3,:,:]==0, axis=0) # outside every scene
+                                                mixed_clone=np.moveaxis(mixed_clone, [0, 1, 2], [1, 2, 0]).astype('uint16')
+                                                out[h:h+3,:,:]=mixed_clone
 
-                                            imgrgb2[temp==1,:]=0
-                                            mosaic_rgb2[temp==1,:]=0
-                                            cld[cld==1]=255
-                                            mixed_clone = seamless_clone_over_nodata( imgrgb2, mosaic_rgb2, cld, centerOfBR, nodata)
+                                            outcome =out *imgBits
+                                            out2=out *imgBits
+                                            for p in [0,1,2,3]:
+                                                imgrgb=imagePool.read(p+1,window=write_window)
+                                                out2[p,:,:][temp==1]=imgrgb[temp==1]
+                                            if np.any(temp==1)==True:
+                                                cldzeroNum+=1
+                                                print('loop:',i,'; cld_temp:',j)
+                                            if np.any(temp==1)==True and np.any(out2[0,:,:][tw6mMask==1]==0)==True:
+                                                zeroNum+=1
+                                                print('loop:',i,'; hole_Name:',j,'code:',code)
 
-                                            mixed_clone=np.moveaxis(mixed_clone, [0, 1, 2], [1, 2, 0]).astype('uint16')
-                                            out[h:h+3,:,:]=mixed_clone
+                                            if code==0:
+                                                cldblendPix=25
+                                                temp[np.where(temp==0)]=(cldblendPix+1)
 
-                                        outcome =out *imgBits
-                                        out2=out *imgBits
-                                        for p in [0,1,2,3]:
-                                            imgrgb=imagePool.read(p+1,window=write_window)
-                                            out2[p,:,:][temp==1]=imgrgb[temp==1]
-                                        if np.any(temp==1)==True:
-                                            cldzeroNum+=1
-                                            print('loop:',i,'; cld_temp:',j)
-                                        if np.any(temp==1)==True and np.any(out2[0,:,:][tw6mMask==1]==0)==True:
-                                            zeroNum+=1
-                                            print('loop:',i,'; hole_Name:',j,'code:',code)
+                                                mask_blurred  = cv2.GaussianBlur(temp,(cldblendPix,cldblendPix),0)
+                                                mask_blurred_3chan = cv2.cvtColor(mask_blurred, cv2.COLOR_GRAY2BGR).astype('float32') / (cldblendPix+1)
+                                                mask_blurred_4chan = np.concatenate( [mask_blurred_3chan,mask_blurred[...,None]/(cldblendPix+1)], axis=2)
+                                                mask_blurred_4chan=np.moveaxis(mask_blurred_4chan, [0, 1, 2], [1, 2, 0])
+                                                mask_blurred_4chan[:,temp==1]=0
 
-                                        if code==0:
-                                            cldblendPix=25
-                                            temp[np.where(temp==0)]=(cldblendPix+1)
+                                                imgrgb=imagePool.read(window=write_window)
+                                                outcome=outcome.astype(imgtype) * mask_blurred_4chan + imgrgb.astype(imgtype) *( 1-mask_blurred_4chan)
 
-                                            mask_blurred  = cv2.GaussianBlur(temp,(cldblendPix,cldblendPix),0)
-                                            mask_blurred_3chan = cv2.cvtColor(mask_blurred, cv2.COLOR_GRAY2BGR).astype('float32') / (cldblendPix+1)
-                                            mask_blurred_4chan = np.concatenate( [mask_blurred_3chan,mask_blurred[...,None]/(cldblendPix+1)], axis=2)
-                                            mask_blurred_4chan.astype('float32')
-                                            mask_blurred_4chan=np.moveaxis(mask_blurred_4chan, [0, 1, 2], [1, 2, 0])
-                                            mask_blurred_4chan[:,temp==1]=0
-
-                                            imgrgb=imagePool.read(window=write_window)
-                                            outcome=outcome.astype(imgtype) * mask_blurred_4chan + imgrgb.astype(imgtype) *( 1-mask_blurred_4chan)
-
-                                            cldcy=cld.copy()
-                                            blendPix=65
-                                            cldcy[np.where(cld==255)]=(blendPix+1)
-
-                                            mosaic_rgb=mosaic_xs.read(window=ints_window)
-
-                                            try:
-                                                mask_blurred  = cv2.GaussianBlur(cldcy,(blendPix,blendPix),0)
-                                            except cv2.error:
-                                                blendPix=35
                                                 cldcy=cld.copy()
+                                                blendPix=65
                                                 cldcy[np.where(cld==255)]=(blendPix+1)
-                                                mask_blurred  = cv2.GaussianBlur(cldcy,(blendPix,blendPix),0)
-                                            if np.any(mask_blurred[0,:]!=0) or np.any(mask_blurred[-1,:]!=0) or np.any(mask_blurred[:,0]!=0) or np.any(mask_blurred[:,-1]!=0):
-                                                blendPix=25
-                                                cldcy=cld.copy()
-                                                cldcy[np.where(cld==255)]=(blendPix+1)
-                                                mask_blurred  = cv2.GaussianBlur(cldcy,(blendPix,blendPix),0)
 
-                                            mask_blurred_3chan = cv2.cvtColor(mask_blurred, cv2.COLOR_GRAY2BGR).astype('float32') / (blendPix+1)
-                                            mask_blurred_4chan = np.concatenate( [mask_blurred_3chan,mask_blurred[...,None]/(blendPix+1)], axis=2)
-                                            mask_blurred_4chan.astype('float32')
-                                            mask_blurred_4chan=np.moveaxis(mask_blurred_4chan, [0, 1, 2], [1, 2, 0])
-                                            outcome=outcome.astype(imgtype) * mask_blurred_4chan + mosaic_rgb.astype(imgtype) *( 1-mask_blurred_4chan)
+                                                mosaic_rgb=mosaic_xs.read(window=ints_window)
 
-                                    if code==0:
+                                                try:
+                                                    mask_blurred  = cv2.GaussianBlur(cldcy,(blendPix,blendPix),0)
+                                                except cv2.error:
+                                                    blendPix=35
+                                                    cldcy=cld.copy()
+                                                    cldcy[np.where(cld==255)]=(blendPix+1)
+                                                    mask_blurred  = cv2.GaussianBlur(cldcy,(blendPix,blendPix),0)
+                                                if np.any(mask_blurred[0,:]!=0) or np.any(mask_blurred[-1,:]!=0) or np.any(mask_blurred[:,0]!=0) or np.any(mask_blurred[:,-1]!=0):
+                                                    blendPix=25
+                                                    cldcy=cld.copy()
+                                                    cldcy[np.where(cld==255)]=(blendPix+1)
+                                                    mask_blurred  = cv2.GaussianBlur(cldcy,(blendPix,blendPix),0)
 
-                                        stage2+=1
+                                                mask_blurred_3chan = cv2.cvtColor(mask_blurred, cv2.COLOR_GRAY2BGR).astype('float32') / (blendPix+1)
+                                                mask_blurred_4chan = np.concatenate( [mask_blurred_3chan,mask_blurred[...,None]/(blendPix+1)], axis=2)
+                                                mask_blurred_4chan=np.moveaxis(mask_blurred_4chan, [0, 1, 2], [1, 2, 0])
+                                                outcome=outcome.astype(imgtype) * mask_blurred_4chan + mosaic_rgb.astype(imgtype) *( 1-mask_blurred_4chan)
 
-                                        Count+=1
-                                        outcome=outcome.astype(imgtype)
+                                            if code==0:
 
-                                        with rasterio.open(mosaic_xs_path, 'r+') as dst:
-                                            dst.write(outcome,  window=ints_window)
-                                        mosaic_xs.close()
+                                                stage2+=1
 
-                                        cloudmask=rasterio.open(cloudmask_path,'r+')
-                                        taicld=cloudmask.read(1,window=ints_window_TaicldWin)
-                                        taicld[np.where((cld==255) & (temp!=1) & (tw6mMask==1))]=0
-                                        taicld[np.where( (temp==1) & (tw6mMask==1) ) ]=(i+1)*10
-                                        cloudmask.close()
-                                        with rasterio.open(cloudmask_path, 'r+') as dst:
-                                            dst.write(taicld.astype(imgtype),1,  window=ints_window_TaicldWin)
+                                                Count+=1
+                                                outcome=outcome.astype(imgtype)
 
-                                        #resize cldb mask to pan's res
-                                        mask_blurred_pan_chan=cv2.resize( mask_blurred_4chan[1,:,:],(int(mask_blurred_4chan[1,:,:].shape[1]*(res/pan_res)),int(mask_blurred_4chan[1,:,:].shape[0]*(res/pan_res))) ,interpolation=cv2.INTER_NEAREST)
+                                                with rasterio.open(mosaic_xs_path, 'r+') as dst:
+                                                    dst.write(outcome,  window=ints_window)
+                                                mosaic_xs.close()
 
+                                                with rasterio.open(cloudmask_path) as cloudmask:
+                                                    taicld=cloudmask.read(1,window=ints_window_TaicldWin)
+                                                taicld[np.where((cld==255) & (temp!=1) & (tw6mMask==1))]=0
+                                                taicld[np.where( (temp==1) & (tw6mMask==1) ) ]=(i+1)*10
+                                                with rasterio.open(cloudmask_path, 'r+') as dst:
+                                                    dst.write(taicld.astype(imgtype),1,  window=ints_window_TaicldWin)
 
-                                        #read big pan which is cldb mask's counterpart
-                                        with rasterio.open( mosaic_xs_path) as src:
-
-                                            win_transform = src.window_transform(ints_window)
-                                            panBounds=from_bounds(win_transform[2], win_transform[5]-ints_window.height*res, win_transform[2]+ints_window.width*res, win_transform[5], src.transform)
-                                        mosaic_pan= rasterio.open( mosaic_pan_path,'r+')
-                                        bigpan = mosaic_pan.read(1 ,window=from_bounds(win_transform[2], win_transform[5]-ints_window.height*res, win_transform[2]+ints_window.width*res, win_transform[5], mosaic_pan.transform))
-                                        mosaic_pan.close()
+                                                #resize cldb mask to pan's res
+                                                mask_blurred_pan_chan=cv2.resize( mask_blurred_4chan[1,:,:],(int(mask_blurred_4chan[1,:,:].shape[1]*(res/pan_res)),int(mask_blurred_4chan[1,:,:].shape[0]*(res/pan_res))) ,interpolation=cv2.INTER_NEAREST)
 
 
-                                        #read pan_imagePool which is cldb mask's counterpart
-                                        PAN_fName=fName[0]+str(int(fName[fName.find('0'):fName.find('0')+7])+1).zfill(7)
-                                        pan_imagePool = rasterio.open(pan_scene_path(Pan_Addr, PAN_fName))
+                                                #read big pan which is cldb mask's counterpart
+                                                with rasterio.open( mosaic_xs_path) as src:
 
-                                        smallpan=pan_imagePool.read(1,window= from_bounds(win_transform[2], win_transform[5]-ints_window.height*res, win_transform[2]+ints_window.width*res, win_transform[5], pan_imagePool.transform))
-                                        pan_imagePool.close()
-                                        outcome=(smallpan.astype(imgtype) * mask_blurred_pan_chan + bigpan.astype(imgtype) *( 1-mask_blurred_pan_chan) ).astype(imgtype)
-                                        with rasterio.open( mosaic_pan_path,'r+') as dst:
-                                            dst.write( outcome, 1, window= from_bounds(win_transform[2], win_transform[5]-ints_window.height*res, win_transform[2]+ints_window.width*res, win_transform[5], dst.transform ) )
-                                        del outcome,smallpan,bigpan
-                                        ss=1
+                                                    win_transform = src.window_transform(ints_window)
+                                                    panBounds=from_bounds(win_transform[2], win_transform[5]-ints_window.height*res, win_transform[2]+ints_window.width*res, win_transform[5], src.transform)
+                                                mosaic_pan= rasterio.open( mosaic_pan_path,'r+')
+                                                bigpan = mosaic_pan.read(1 ,window=from_bounds(win_transform[2], win_transform[5]-ints_window.height*res, win_transform[2]+ints_window.width*res, win_transform[5], mosaic_pan.transform))
+                                                mosaic_pan.close()
 
 
-                                elif ssim[ssimIndex[-1],a-1]==-0.9 and np.any(imgrgb[0,:,:][cld==1]==0)==False and clear_fraction>0.55:
-                                    cldcy=cld.copy()
-                                    blendPix=65
-                                    cldcy[np.where(cld==1)]=(blendPix+1)
-                                    try:
-                                        mask_blurred  = cv2.GaussianBlur(cldcy,(blendPix,blendPix),0)
-                                    except cv2.error:
-                                        blendPix=35
-                                        cldcy=cld.copy()
-                                        cldcy[np.where(cld==1)]=(blendPix+1)
-                                        mask_blurred  = cv2.GaussianBlur(cldcy,(blendPix,blendPix),0)
-                                    if np.any(mask_blurred[0,:]!=0) or np.any(mask_blurred[-1,:]!=0) or np.any(mask_blurred[:,0]!=0) or np.any(mask_blurred[:,-1]!=0):
-                                        blendPix=25
-                                        cldcy=cld.copy()
-                                        cldcy[np.where(cld==1)]=(blendPix+1)
-                                        mask_blurred  = cv2.GaussianBlur(cldcy,(blendPix,blendPix),0)
+                                                #read pan_imagePool which is cldb mask's counterpart
+                                                PAN_fName=fName[0]+str(int(fName[fName.find('0'):fName.find('0')+7])+1).zfill(7)
+                                                pan_imagePool = rasterio.open(pan_scene_path(Pan_Addr, PAN_fName))
 
-                                    mask_blurred_3chan = cv2.cvtColor(mask_blurred, cv2.COLOR_GRAY2BGR).astype('float32') / (blendPix+1)
-                                    mask_blurred_4chan = np.concatenate( [mask_blurred_3chan,mask_blurred[...,None]/(blendPix+1)], axis=2)
-                                    mask_blurred_4chan.astype('float32')
-
-                                    mask_blurred_4chan=np.moveaxis(mask_blurred_4chan, [0, 1, 2], [1, 2, 0])
-
-                                    tw6mMask=land_sea_mask.read(1,window=ints_window_tw6m)
-                                    out = 255 * np.zeros(mosaic_rgb.shape)
-                                    temp=cldb.copy()
-                                    temp[cld==0]=1
-                                    temp[temp<=2]=1
-                                    temp[temp>10]=10
-                                    kernel = np.ones((10,10), np.uint8)
-                                    temp = cv2.dilate(temp, kernel, iterations = 1)
-                                    h, w = temp.shape[:2]
-                                    mask = np.zeros((h+2, w+2), np.uint8)
-                                    cv2.floodFill(temp, mask, (1,1), 0)
-                                    temp[temp!=0]=1
+                                                smallpan=pan_imagePool.read(1,window= from_bounds(win_transform[2], win_transform[5]-ints_window.height*res, win_transform[2]+ints_window.width*res, win_transform[5], pan_imagePool.transform))
+                                                pan_imagePool.close()
+                                                outcome=(smallpan.astype(imgtype) * mask_blurred_pan_chan + bigpan.astype(imgtype) *( 1-mask_blurred_pan_chan) ).astype(imgtype)
+                                                with rasterio.open( mosaic_pan_path,'r+') as dst:
+                                                    dst.write( outcome, 1, window= from_bounds(win_transform[2], win_transform[5]-ints_window.height*res, win_transform[2]+ints_window.width*res, win_transform[5], dst.transform ) )
+                                                del outcome,smallpan,bigpan
+                                                ss=1
 
 
-                                    mosaic_xs= rasterio.open(mosaic_xs_path)
+                                except rasterio.errors.WindowError as error:
+                                    logger.debug("Cloud filling skipped for patch %s, candidate %s: %s",
+                                                 j, fName, error)
+                                except Exception as error:
+                                    logger.warning("Cloud filling failed for patch %s, candidate %s: %s",
+                                                   j, fName, error, exc_info=True)
 
-                                    mosaic_rgb=mosaic_xs.read(window=ints_window)
-                                    outcome=mosaic_rgb.astype(imgtype) *(1- mask_blurred_4chan)+ imgrgb.astype(imgtype) *( mask_blurred_4chan)
-                                    stage3+=1
-
-                                    Count+=1
-                                    outcome=outcome.astype(imgtype)
-
-                                    with rasterio.open(mosaic_xs_path, 'r+') as dst:
-                                        dst.write(outcome,  window=ints_window)
-                                    mosaic_xs.close()
-
-                                    cloudmask=rasterio.open(cloudmask_path,'r+')
-                                    taicld=cloudmask.read(1,window=ints_window_TaicldWin)
-                                    taicld[np.where((cld==1) & (temp==0) & (tw6mMask==1))]=0
-                                    taicld[np.where( (temp==1) & (tw6mMask==1) ) ]=(i+1)*10
-                                    cloudmask.close()
-                                    with rasterio.open(cloudmask_path, 'r+') as dst:
-                                        dst.write(taicld.astype(imgtype), 1, window=ints_window_TaicldWin)
-                                    #resize cldb mask to pan's res
-                                    mask_blurred_pan_chan=cv2.resize( mask_blurred_4chan[1,:,:],(int(mask_blurred_4chan[1,:,:].shape[1]*(res/pan_res)),int(mask_blurred_4chan[1,:,:].shape[0]*(res/pan_res))) ,interpolation=cv2.INTER_NEAREST)
-
-
-                                    #read big pan which is cldb mask's counterpart
-                                    with rasterio.open( mosaic_xs_path) as src:
-
-                                        win_transform = src.window_transform(ints_window)
-                                        panBounds=from_bounds(win_transform[2], win_transform[5]-ints_window.height*res, win_transform[2]+ints_window.width*res, win_transform[5], src.transform)
-                                    mosaic_pan= rasterio.open( mosaic_pan_path,'r+')
-                                    bigpan = mosaic_pan.read(1 ,window=from_bounds(win_transform[2], win_transform[5]-ints_window.height*res, win_transform[2]+ints_window.width*res, win_transform[5], mosaic_pan.transform))
-                                    mosaic_pan.close()
-
-
-                                    #read pan_imagePool which is cldb mask's counterpart
-                                    PAN_fName=fName[0]+str(int(fName[fName.find('0'):fName.find('0')+7])+1).zfill(7)
-                                    pan_imagePool = rasterio.open(pan_scene_path(Pan_Addr, PAN_fName))
-
-                                    smallpan=pan_imagePool.read(1,window= from_bounds(win_transform[2], win_transform[5]-ints_window.height*res, win_transform[2]+ints_window.width*res, win_transform[5], pan_imagePool.transform))
-                                    pan_imagePool.close()
-                                    outcome=(smallpan.astype(imgtype) * mask_blurred_pan_chan + bigpan.astype(imgtype) *( 1-mask_blurred_pan_chan) ).astype(imgtype)
-                                    with rasterio.open( mosaic_pan_path,'r+') as dst:
-                                        dst.write( outcome, 1, window= from_bounds(win_transform[2], win_transform[5]-ints_window.height*res, win_transform[2]+ints_window.width*res, win_transform[5], dst.transform ) )
-                                    del outcome,smallpan,bigpan
-
-                                    ss=1
-
-                        except rasterio.errors.WindowError as error:
-                            logger.debug("Cloud filling skipped for patch %s, candidate %s: %s",
-                                         j, fName, error)
-                        except Exception as error:
-                            logger.warning("Cloud filling failed for patch %s, candidate %s: %s",
-                                           j, fName, error, exc_info=True)
-
-        print('stage1:',stage1)
         print('stage2:',stage2)
         print('cldzeroNum:',cldzeroNum)
         print('zeroExist:',zeroNum)
-        print('stage3:',stage3)
         print('right,up,left,low:',right,up,left,low)
-        cld_ds.close()
-        cloudmask.close()
         dirpath=cloud_work_path+os.sep
         for filename in os.listdir(dirpath):
             filepath = os.path.join(dirpath, filename)
@@ -765,6 +563,7 @@ def main():
                 os.remove(filepath)
 
 
+    land_sea_mask.close()
     print('All done!')
     print(Count,'/',total,' reconstructions of cloud-contaminated area')
     end = timer()

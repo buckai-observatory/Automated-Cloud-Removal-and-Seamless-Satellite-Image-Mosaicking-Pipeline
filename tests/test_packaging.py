@@ -4,6 +4,7 @@ import pathlib
 import shutil
 import subprocess
 import sys
+import sysconfig
 
 import pytest
 
@@ -86,8 +87,9 @@ def _installed():
 @pytest.mark.skipif(not _installed(), reason="package not installed (pip install .)")
 @pytest.mark.parametrize("command", sorted(COMMANDS))
 def test_installed_command_shows_help(command):
-    exe = shutil.which(command, path=str(pathlib.Path(sys.executable).parent))
-    assert exe is not None, f"{command} not installed next to {sys.executable}"
+    scripts = sysconfig.get_path("scripts")  # bin on Linux and macOS, Scripts on Windows
+    exe = shutil.which(command, path=scripts)
+    assert exe is not None, f"{command} not installed in {scripts}"
     result = subprocess.run([exe, "--help"], capture_output=True, text=True, check=True)
     assert result.stdout.startswith(f"usage: {command}")
 

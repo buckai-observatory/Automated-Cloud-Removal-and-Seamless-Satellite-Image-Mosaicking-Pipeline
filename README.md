@@ -204,7 +204,7 @@ paper.md               JOSS paper source
 ## Contributing
 
 See [`CONTRIBUTING.md`](CONTRIBUTING.md).
-Each author's and contributor's role is listed in
+Each author's role is listed in
 [`CONTRIBUTORS.md`](CONTRIBUTORS.md).
 
 ## License

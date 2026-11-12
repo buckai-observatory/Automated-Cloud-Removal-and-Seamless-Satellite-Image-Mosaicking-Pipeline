@@ -41,13 +41,6 @@ in the underlying research follow the CRediT statement of Hsu et al.
 - **Lo, Chi-Chuan** — Center for Space and Remote Sensing Research,
   National Central University. Visualization.
 
-## Other code contributors
+## Contributing
 
-- **Aschenbath, Nash** ([@Aschenbath](https://github.com/Aschenbath)) —
-  TODO: affiliation. Bug fixes and regression tests in Steps 2–4 and the
-  configuration guide (#26, #28, #31–#37, #39–#42).
-
-## How to be listed
-
-Anyone whose pull request is merged is added here with a one-line
-description of their contribution. See [CONTRIBUTING.md](CONTRIBUTING.md).
+Contributions are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md).

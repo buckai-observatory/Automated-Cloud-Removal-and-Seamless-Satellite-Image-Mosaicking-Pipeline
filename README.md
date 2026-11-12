@@ -54,6 +54,17 @@ conda install -c conda-forge gdal rasterio geopandas shapely
 pip install -r requirements.txt
 ```
 
+Alternatively, install the pipeline as a package (`pip install .` from a clone; it uses the same `requirements.txt`). This adds one command per step, each taking the prepared working folder (the folder with the step's parameter file) as its argument:
+
+```bash
+pip install .
+mosaic-step2 path/to/step2_folder   # reads para.txt
+mosaic-step3 path/to/step3_folder   # reads para_pan.txt
+mosaic-step4 path/to/step4_folder   # reads para_cld.txt
+```
+
+The folder must be prepared as for `python step*.py` (Step 2 also needs `NSPO_GRID_vectorization/` there). Running `run.bat` or `python step*.py` inside each folder works as before.
+
 ## Requirements
 
 - **Python 3.10+** with the packages in `requirements.txt` (Steps 2–4 run on Windows, macOS and Linux)

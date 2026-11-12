@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=64", "setuptools_scm>=8"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cloud-removal-mosaicking"
+description = "Automated cloud removal and seamless satellite image mosaicking pipeline (Steps 2-4)"
+readme = "README.md"
+license = {file = "LICENSE"}
+authors = [{name = "Hsiao-Jou Hsu"}]
+requires-python = ">=3.10"
+dynamic = ["version", "dependencies"]
+
+[project.urls]
+Repository = "https://github.com/buckai-observatory/Automated-Cloud-Removal-and-Seamless-Satellite-Image-Mosaicking-Pipeline"
+
+[project.scripts]
+mosaic-step2 = "cloud_mosaic.cli:step2"
+mosaic-step3 = "cloud_mosaic.cli:step3"
+mosaic-step4 = "cloud_mosaic.cli:step4"
+
+[tool.setuptools]
+# The step scripts stay in their own folders so that `python step*.py` and
+# run.bat keep working; they are installed as subpackages of cloud_mosaic.
+packages = ["cloud_mosaic", "cloud_mosaic.step2", "cloud_mosaic.step3", "cloud_mosaic.step4"]
+include-package-data = false
+
+[tool.setuptools.package-dir]
+"cloud_mosaic" = "cloud_mosaic"
+"cloud_mosaic.step2" = "step2_mosaic"
+"cloud_mosaic.step3" = "step3_pan_mosaic"
+"cloud_mosaic.step4" = "step4_cloud_removal"
+
+[tool.setuptools.dynamic]
+# requirements.txt stays the single list of dependencies (with the OpenCV pin).
+dependencies = {file = ["requirements.txt"]}
+
+[tool.setuptools_scm]
+fallback_version = "0.0.0"

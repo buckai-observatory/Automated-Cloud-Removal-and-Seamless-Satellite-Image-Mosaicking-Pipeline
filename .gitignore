@@ -38,3 +38,7 @@ jats/
 demo_output/
 # documentation website build (site/build_site.py)
 site/_build/
+# packaging (pip install .)
+build/
+dist/
+*.egg-info/

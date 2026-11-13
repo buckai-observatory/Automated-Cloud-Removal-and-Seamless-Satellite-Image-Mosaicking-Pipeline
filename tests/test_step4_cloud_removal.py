@@ -277,3 +277,28 @@ def test_seamless_clone_ignores_mosaic_nodata(step4):
     assert not np.any(out[inside] == 0)
     assert abs(out[inside].mean() - src[inside].mean()) < 3
     np.testing.assert_array_equal(out[~inside & ~nodata], dst[~inside & ~nodata])
+
+
+def test_poisson_zeros_are_raised_where_the_candidate_has_data(step4):
+    """An 8-bit seamlessClone that undershoots clips to 0; that must not become nodata (#51)."""
+    import cv2
+
+    src = np.full((40, 40, 3), 100, np.uint8)
+    src[18:22, 18:22] = 1              # deep, sharp dip; the candidate still has data
+    dst = np.full((40, 40, 3), 20, np.uint8)  # dark mosaic around the patch
+    mask = np.zeros((40, 40), np.uint8)
+    mask[10:30, 10:30] = 255
+    region = mask == 255
+    blended = np.moveaxis(cv2.seamlessClone(src, dst, mask, (20, 20), cv2.NORMAL_CLONE), 2, 0).astype(float)
+    assert np.any(blended[:, region] == 0)  # the clone clipped to 0
+
+    candidate = np.moveaxis(src, 2, 0).astype(np.uint16) * 16
+    candidate[0] = 0                   # a band without data in the candidate stays 0
+    before = blended.copy()
+    step4.raise_clipped_zeros(blended, candidate, region)
+
+    raised = (before == 0) & (candidate > 0) & region
+    assert raised.any()
+    np.testing.assert_array_equal(blended[raised], 1)
+    np.testing.assert_array_equal(blended[~raised], before[~raised])
+    assert np.all(blended[0][before[0] == 0] == 0)

@@ -156,7 +156,7 @@ step4/
 ├── mosaic_xs.tif  mosaic_cloudmask.tif   # from Step 2
 ├── mosaic_pan.tif                         # from Step 3
 ├── allWindow.npy  transform.npy  ProcessOrder.txt   # from Step 2
-├── land_sea_mask.img                      # user-provided; must match XS grid
+├── land_sea_mask.img  # user-provided; must cover the same geographic area as the XS mosaic
 ├── cloud_database/                        # candidate XS scenes for filling
 ├── cloud_masks/                           # cloud-mask database for the candidates
 ├── raw_pan/                               # candidate Pan scenes

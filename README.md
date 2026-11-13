@@ -83,7 +83,7 @@ Input data (not included): orthorectified satellite XS scenes (`.raw`/`.img`) wi
 
 > **Configurable canvas extents:** the mosaic canvas bounds are set in each step's configuration file (`canvas_x_max`, `canvas_y_min`, `canvas_crs`). The defaults use the Taiwan TWD97 coordinate system (`EPSG:3826`). To mosaic imagery in another region, update these parameters in `para.txt`, `para_pan.txt`, and `para_cld.txt`.
 
-> **Land/sea mask:** Step 4 requires a binary land/sea border mask raster that matches the XS mosaic grid. This file is **not included**. Create or obtain one for your study area and set its path via `seaBorderAddress` in `para_cld.txt`.
+> **Land/sea mask:** Step 4 requires a binary land/sea border mask raster (`1` = land, `0` = sea). This file is **not included**. Create or obtain one for your study area and set its path via `seaBorderAddress` in `para_cld.txt`. The mask must use the same CRS and pixel size (`res`) as the XS mosaic, be aligned to the XS pixel grid, and cover the mosaic extent. It does not need the same width, height or origin as the mosaic: Step 4 reads it by window in map coordinates (the Sentinel-2 demo's mask spans the whole area of interest and is larger than its mosaic).
 
 ---
 
@@ -157,7 +157,7 @@ step4/
 ├── mosaic_xs.tif  mosaic_cloudmask.tif   # from Step 2
 ├── mosaic_pan.tif                         # from Step 3
 ├── allWindow.npy  transform.npy  ProcessOrder.txt   # from Step 2
-├── land_sea_mask.img                      # user-provided; must match XS grid
+├── land_sea_mask.img                      # user-provided; see "Land/sea mask" note above
 ├── cloud_database/                        # candidate XS scenes for filling
 ├── cloud_masks/                           # cloud-mask database for the candidates
 ├── raw_pan/                               # candidate Pan scenes

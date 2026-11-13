@@ -152,7 +152,10 @@ start at Step 2. Steps 2–4 are Python and run on Windows, macOS and Linux; on
 Windows, Step 2 can still use the original compiled boundary-mask tool, and
 elsewhere it uses an equivalent Python implementation. Step 4 requires
 OpenCV < 4.11, because later versions of `seamlessClone` no longer transfer the
-source texture; a unit test guards against this.
+source texture; a unit test guards against this. `seamlessClone` also works on
+8-bit images, so Step 4 blends each patch at 8-bit precision: filled pixels are
+quantised to 1/256 of the sensor's dynamic range (steps of 16 DN for 12-bit
+data). Pixels outside cloud patches keep their full bit depth.
 
 # Research impact statement
 

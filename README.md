@@ -73,6 +73,11 @@ The folder must be prepared as for `python step*.py` (Step 2 also needs `NSPO_GR
 - Optional, Windows only: **MATLAB Runtime R2018a (v9.4)** for the original `GetBoundaryMask.exe` used in Step 2. Elsewhere, or if it is missing, Step 2 uses an equivalent pure-Python footprint polygonizer.
 
 > **OpenCV version:** Step 4 needs OpenCV < 4.11. From 4.11 on, `cv2.seamlessClone` keeps the destination texture and clouds are not removed. `requirements.txt` pins this, and the test suite checks it.
+>
+> **8-bit blending:** `cv2.seamlessClone` works on 8-bit images, so Step 4 scales the
+> bands to 8 bits for the Poisson blend and back afterwards. Filled pixels are therefore
+> quantised to steps of `2**(trueBits - 8)` (16 for 12-bit data). Where the blend
+> would go below zero, the pixel is set to one step rather than 0 (no data).
 
 Input data (not included): orthorectified satellite XS scenes (`.raw`/`.img`) with matching Pan scenes and per-scene cloud masks (`.ers` or `.tif`), plus the Step-1 reference images.
 

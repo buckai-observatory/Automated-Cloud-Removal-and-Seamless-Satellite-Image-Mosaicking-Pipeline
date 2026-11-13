@@ -77,6 +77,17 @@ def seamless_clone_over_nodata(src, dst, mask, center, nodata):
     dst[nodata]=src[nodata]
     return cv2.seamlessClone(src, dst, mask, center, cv2.NORMAL_CLONE)
 
+def raise_clipped_zeros(blended, candidate, region):
+    """Raise 8-bit Poisson results that saturated at 0 to the smallest valid step.
+
+    seamlessClone works in 8 bit and clips at 0, so a dark patch can come out
+    as 0 (nodata) in a band where the candidate has data (#51). Only those
+    pixels inside *region* change; *blended* is (bands, rows, cols) and is
+    modified in place and returned.
+    """
+    blended[(blended==0) & (candidate>0) & region]=1
+    return blended
+
 def image_dtype(true_bits):
     """Return the smallest unsigned storage dtype that fits the sensor bit depth."""
     if not 1 <= true_bits <= 64:
@@ -449,6 +460,7 @@ def main():
                                                 mixed_clone=np.moveaxis(mixed_clone, [0, 1, 2], [1, 2, 0]).astype('uint16')
                                                 out[h:h+3,:,:]=mixed_clone
 
+                                            raise_clipped_zeros(out, imagePool.read(window=write_window), (cld==255) & (temp==0) & (tw6mMask==1))
                                             outcome =out *imgBits
                                             out2=out *imgBits
                                             for p in [0,1,2,3]:
@@ -457,9 +469,10 @@ def main():
                                             if np.any(temp==1)==True:
                                                 cldzeroNum+=1
                                                 print('loop:',i,'; cld_temp:',j)
-                                            if np.any(temp==1)==True and np.any(out2[0,:,:][tw6mMask==1]==0)==True:
+                                            zero_bands=[p+1 for p in range(out2.shape[0]) if np.any(out2[p][(cld==255) & (tw6mMask==1)]==0)]
+                                            if zero_bands:
                                                 zeroNum+=1
-                                                print('loop:',i,'; hole_Name:',j,'code:',code)
+                                                print('loop:',i,'; hole_Name:',j,'code:',code,'; zero pixels in bands:',zero_bands)
 
                                             if code==0:
                                                 cldblendPix=25

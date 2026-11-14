@@ -83,7 +83,7 @@ Input data (not included): orthorectified satellite XS scenes (`.raw`/`.img`) wi
 
 > **Configurable canvas extents:** the mosaic canvas bounds are set in each step's configuration file (`canvas_x_max`, `canvas_y_min`, `canvas_crs`). The defaults use the Taiwan TWD97 coordinate system (`EPSG:3826`). To mosaic imagery in another region, update these parameters in `para.txt`, `para_pan.txt`, and `para_cld.txt`.
 
-> **Land/sea mask:** Step 4 requires a binary land/sea border mask raster that matches the XS mosaic grid. This file is **not included**. Create or obtain one for your study area and set its path via `seaBorderAddress` in `para_cld.txt`.
+> **Land/sea mask:** Step 4 requires a binary land/sea border mask raster that uses the same CRS and resolution as the XS mosaic and covers the full mosaic extent. This file is **not included**. Create or obtain one for your study area and set its path via `seaBorderAddress` in `para_cld.txt`.
 
 ---
 

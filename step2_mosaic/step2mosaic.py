@@ -1699,6 +1699,7 @@ def main():
                 width=  int( (   canvas_x_max-  float(min( gt_two)   ))/res ),
                 count=4,
                 dtype=image1_isect_array.dtype,
+                nodata=0, # outside every scene; the steps already treat 0 as no data
 
                 crs= canvas_crs,#
                 transform=mosaic_gt)

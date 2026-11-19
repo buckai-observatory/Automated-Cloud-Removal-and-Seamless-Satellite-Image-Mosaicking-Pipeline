@@ -137,8 +137,10 @@ def test_steps_2_to_4_end_to_end(demo, step2, step3, step4, tmp_path, monkeypatc
         xs = src.read()
         assert src.count == 4 and src.dtypes[0] == "uint16"
         assert src.crs.to_string() == demo.CRS
+        assert src.nodata == 0  # area outside the scenes (#49)
     with rasterio.open(s2 / "mosaic_cloudmask.tif") as src:
         cloud_before = src.read(1) == 1
+        assert src.nodata is None  # 0 means clear here, not no data
     assert np.all(xs > 0, axis=0).mean() > 0.5
     assert cloud_before.sum() > 0
 
@@ -151,6 +153,7 @@ def test_steps_2_to_4_end_to_end(demo, step2, step3, step4, tmp_path, monkeypatc
     with rasterio.open(s3 / "mosaic_pan.tif") as src:
         pan = src.read(1)
         assert src.res == (demo.PAN_RES, demo.PAN_RES)
+        assert src.nodata == 0
     # The Pan mosaic covers the same area as the XS mosaic.
     assert pan.shape == (xs.shape[1] * 2, xs.shape[2] * 2)
     footprint_pan = np.repeat(np.repeat(np.all(xs > 0, axis=0), 2, axis=0), 2, axis=1)
@@ -165,6 +168,9 @@ def test_steps_2_to_4_end_to_end(demo, step2, step3, step4, tmp_path, monkeypatc
     monkeypatch.chdir(s4)
     step4.main()
 
+    for name, nodata in (("mosaic_xs.tif", 0), ("mosaic_pan.tif", 0), ("mosaic_cloudmask.tif", None)):
+        with rasterio.open(s4 / name) as src:
+            assert src.nodata == nodata, name
     result = demo.check_results(s4)
     assert result["zero_pixels"] == 0
     assert result["fill_fraction"] > 0.9

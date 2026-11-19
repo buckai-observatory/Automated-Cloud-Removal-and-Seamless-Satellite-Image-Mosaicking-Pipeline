@@ -1,5 +1,6 @@
 """The pipeline installs as a package with console commands for Steps 2-4 (#7)."""
 import importlib.metadata
+import os
 import pathlib
 import shutil
 import subprocess
@@ -76,12 +77,37 @@ def test_missing_parameter_file_is_reported(tmp_path, monkeypatch):
     assert exc.value.code == 2
 
 
-def _installed():
-    try:
-        importlib.metadata.distribution("cloud-removal-mosaicking")
-    except importlib.metadata.PackageNotFoundError:
-        return False
-    return True
+# Run in a fresh interpreter started outside the repository, so that neither the
+# source folder cloud_mosaic/ nor a leftover cloud_removal_mosaicking.egg-info
+# from `pip install .` (both found through the repository root on sys.path)
+# is taken for an installed package (#50).
+_FIND_STEPS = ("import importlib.util, sys; "
+               "sys.exit(importlib.util.find_spec('cloud_mosaic.step2') is None)")
+
+
+def _installed(flags=(), env=None):
+    """True if the installed package, with its step subpackages, can be imported."""
+    result = subprocess.run([sys.executable, *flags, "-c", _FIND_STEPS], capture_output=True,
+                            cwd=pathlib.Path(sys.executable).parent, env=env)
+    return result.returncode == 0
+
+
+def test_leftover_egg_info_is_not_taken_for_an_install(tmp_path):
+    # A clone after `pip install .`: the source package and the egg-info folder,
+    # seen by an interpreter where the package is not installed (-S: no site-packages).
+    (tmp_path / "cloud_mosaic").mkdir()
+    (tmp_path / "cloud_mosaic" / "__init__.py").write_text("")
+    egg_info = tmp_path / "cloud_removal_mosaicking.egg-info"
+    egg_info.mkdir()
+    (egg_info / "PKG-INFO").write_text(
+        "Metadata-Version: 2.1\nName: cloud-removal-mosaicking\nVersion: 0.0.0\n")
+    env = {**os.environ, "PYTHONPATH": str(tmp_path)}
+    by_metadata = ("import importlib.metadata as m; "
+                   "print(m.distribution('cloud-removal-mosaicking').version)")
+    result = subprocess.run([sys.executable, "-S", "-c", by_metadata], capture_output=True,
+                            text=True, env=env, cwd=tmp_path, check=True)
+    assert result.stdout.strip() == "0.0.0"  # metadata alone is fooled by the egg-info
+    assert not _installed(["-S"], env)
 
 
 @pytest.mark.skipif(not _installed(), reason="package not installed (pip install .)")

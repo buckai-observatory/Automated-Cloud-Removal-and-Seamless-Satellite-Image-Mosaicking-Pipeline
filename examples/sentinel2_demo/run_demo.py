@@ -177,6 +177,14 @@ def download(data):
     write(data / "land_sea_mask.tif", np.ones((h, w), np.uint8), AOI, XS_RES, "GTiff")
 
 
+def missing_data(data):
+    """Files that download() writes into *data* and that are not there."""
+    needed = [data / "scenes" / f"{name}.img" for name, _, _ in PRIMARY]
+    needed += [data / "candidates" / f"{name}.img" for name, _, _ in CANDIDATES]
+    needed.append(data / "land_sea_mask.tif")
+    return [f for f in needed if not f.exists()]
+
+
 def set_up_steps(work, data):
     """Create fresh step folders, laid out as described in the main README."""
     s2, s3, s4 = work / "step2", work / "step3", work / "step4"
@@ -221,7 +229,8 @@ def write_configs(work):
 
 
 def run_step(script, cwd):
-    print(f"\n=== Running {script} in {cwd} ===")
+    # Flush, so the header comes before the step's output when stdout is a file or CI log.
+    print(f"\n=== Running {script} in {cwd} ===", flush=True)
     subprocess.run([sys.executable, str(REPO / script)], cwd=cwd, check=True)
 
 
@@ -281,6 +290,9 @@ def main():
     data = work / "data"
     if not args.skip_download:
         download(data)
+    elif missing_data(data):
+        sys.exit(f"--skip-download: no downloaded data in {data} (looked for {missing_data(data)[0]}). "
+                 "Rerun without --skip-download, or give the --workdir used for the download.")
     set_up_steps(work, data)
     write_configs(work)
 

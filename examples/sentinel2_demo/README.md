@@ -11,7 +11,7 @@ python examples/sentinel2_demo/run_demo.py --workdir demo_output
 ```
 
 The script needs an internet connection but no account. It takes a few minutes
-on a laptop (Windows, macOS or Linux) and about 150 MB of disk space.
+on a laptop (Windows, macOS or Linux) and about 350 MB of disk space.
 
 ## What it does
 
@@ -49,7 +49,7 @@ In `demo_output/step4/`:
 | `mosaic_xs.tif`, `mosaic_pan.tif` | Final cloud-filled mosaics |
 | `mosaic_cloudmask.tif` | Final cloud mask: 0 = clear or filled, 1 = cloud left unfilled, 10/20 = flagged by the selected candidate's processed cloud mask in the first/second scene window |
 
-With the default settings, Step 4 fills about 16 of 25 cloud patches and
+With the default settings, Step 4 fills about 17 of 26 cloud patches and
 roughly three quarters of the cloudy area. Patches touching the edge of the
 mosaic, and patches with no candidate above the SSIM threshold (0.75), are left
 unfilled by design.
@@ -60,5 +60,10 @@ exits with an error if less than 65% of the cloudy area is filled or if any such
 no-data pixel is left; the monthly demo workflow runs it this way, so a
 regression fails CI instead of quietly lowering the fill rate.
 
-Run `python run_demo.py --skip-download --workdir demo_output` to rerun the
-pipeline on data downloaded earlier.
+To rerun the pipeline on data downloaded earlier, run from the same folder
+(here the repository root) with the same `--workdir`, since `--workdir` is
+relative to the folder you run from:
+
+```bash
+python examples/sentinel2_demo/run_demo.py --skip-download --workdir demo_output
+```

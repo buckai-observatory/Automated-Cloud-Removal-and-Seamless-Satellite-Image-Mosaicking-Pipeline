@@ -358,7 +358,7 @@ def main():
             total+=1
             with rasterio.open(
                         join(cloud_work_path, str(c)+'_cld.img'),
-                        'w+',
+                        'w+', driver='HFA',
                         height=patch_h,
                         width=patch_w,
                         count=1,

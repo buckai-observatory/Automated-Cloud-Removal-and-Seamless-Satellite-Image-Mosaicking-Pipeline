@@ -1585,7 +1585,7 @@ def main():
             print('Saving seamline for:"',image1_ds[:-4],'"...')
             with rasterio.open(
                 str(image1_ds[:-4])+'_seamline.img',
-                'w+',           
+                'w+', driver='HFA',           
                 height=sf.shape[0],
                 width=sf.shape[1],
                 count=1,
@@ -1606,7 +1606,7 @@ def main():
 
             with rasterio.open(
                 str(image1_ds[:-4])+'_seamline_polygon.img',
-                'w+',           
+                'w+', driver='HFA',           
                 height=mask_blurred_4chan.shape[0]*int(res/pan_res),
                 width=mask_blurred_4chan.shape[1]*int(res/pan_res),
                 count=1,
@@ -1774,7 +1774,7 @@ def main():
 
             mosaic_out= rasterio.open(
                 'mosaic_xs.tif',
-                'w+',
+                'w+', driver='GTiff',
 
                 height= int( ( float(max( gt_five))-  canvas_y_min   )/res ),
                 width=  int( (   canvas_x_max-  float(min( gt_two)   ))/res ),
@@ -1790,7 +1790,7 @@ def main():
 
             cloudmask_out= rasterio.open(
                 'mosaic_cloudmask.tif',
-                'w+',
+                'w+', driver='GTiff',
 
                 height= int( ( float(max( gt_five))-  canvas_y_min   )/res ),
                 width=  int( (   canvas_x_max-  float(min( gt_two)   ))/res ),
@@ -1922,7 +1922,7 @@ def main():
             print('Saving "',image1_ds[:-4],'+',image2_ds[:-4],'"seamline ...')
             with rasterio.open(
                 str(image1_ds[:-4])+str(image2_ds[:-4])+'_seamline.img',
-                'w+',           
+                'w+', driver='HFA',           
                 height=sf.shape[0],
                 width=sf.shape[1],
                 count=1,
@@ -1937,7 +1937,7 @@ def main():
 
             with rasterio.open(
                 str(image1_ds[:-4])+str(image2_ds[:-4])+'_seamline_polygon.img',
-                'w+',           
+                'w+', driver='HFA',           
                 height=mask_blurred_4chan.shape[0]*int(res/pan_res),
                 width=mask_blurred_4chan.shape[1]*int(res/pan_res),
                 count=1,

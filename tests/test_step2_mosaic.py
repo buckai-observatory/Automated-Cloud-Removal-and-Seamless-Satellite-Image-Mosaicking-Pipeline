@@ -170,3 +170,18 @@ def test_polygonize_valid_area_outlines_footprint(step2, tmp_path):
     assert len(shp) == 1
     assert shp.area.iloc[0] == 30 * 40 * 10 * 10
     assert shp.total_bounds.tolist() == [1050, 1600, 1450, 1900]
+
+
+def test_blend_region_must_exist(step2):
+    # A seamline that does not split the overlap leaves the flood fill empty.
+    # Blending with that empty mask would silently keep only one image, so
+    # Step 2 stops with a message naming both images (follow-up to #91).
+    with pytest.raises(ValueError, match="a0000003.img and mosaic_xs.tif"):
+        step2.require_blend_region(np.zeros((5, 5), np.uint8), "a0000003.img", "mosaic_xs.tif")
+    step2.require_blend_region(np.eye(5, dtype=np.uint8), "a0000001.img", "a0000003.img")
+
+
+def test_both_blend_mask_builders_check_for_a_blend_region(step2):
+    import inspect
+    source = inspect.getsource(step2.main)
+    assert source.count("require_blend_region(im_floodfill, image1_ds, image2_ds)") == 2

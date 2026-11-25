@@ -44,10 +44,35 @@ def key(tol, ssim):
     return f"t{tol:.2f}_s{ssim:.2f}"
 
 
+def _link_file(src, dst):
+    """Hard-link one file (no extra disk space, no special rights); copy if that fails."""
+    try:
+        os.link(src, dst)
+    except OSError:
+        shutil.copy2(src, dst)
+
+
+def share(src, dst):
+    """Make a SHARED input available in a run folder.
+
+    A symlink where the system allows it; otherwise (for example on Windows
+    without Developer Mode or administrator rights) hard links to the same
+    files, or copies. Step 4 only reads these inputs, so all three are the same
+    to it.
+    """
+    try:
+        os.symlink(src, dst)
+    except OSError:
+        if pathlib.Path(src).is_dir():
+            shutil.copytree(src, dst, copy_function=_link_file)
+        else:
+            _link_file(src, dst)
+
+
 def prepare_run_dir(region, run_dir, tol, ssim):
     run_dir.mkdir(parents=True)
     for name in SHARED:
-        os.symlink(region / name, run_dir / name)
+        share(region / name, run_dir / name)
     for name in COPIED:
         shutil.copy(region / name, run_dir / name)
     for name in MOSAICS:

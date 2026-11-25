@@ -354,3 +354,53 @@ def test_poisson_zeros_are_raised_where_the_candidate_has_data(step4):
     np.testing.assert_array_equal(blended[raised], 1)
     np.testing.assert_array_equal(blended[~raised], before[~raised])
     assert np.all(blended[0][before[0] == 0] == 0)
+
+
+# --- Follow-ups to #76 and #84 ------------------------------------------------
+
+@pytest.mark.parametrize("name, pan", [
+    ("A0000001.img", "A0000002"),
+    ("a0000101.img", "a0000102"),
+    ("A1000101.img", "A1000102"),   # scene number not starting with 0 (#82)
+    ("a1234567.img", "a1234568"),
+])
+def test_pan_counterpart_reads_all_seven_digits(step4, name, pan):
+    assert step4.pan_counterpart(name) == pan
+
+
+def _write_scene(path):
+    import rasterio
+    from rasterio.transform import from_origin
+    with rasterio.open(path, "w", driver="GTiff", height=2, width=2, count=1, dtype="uint8",
+                       crs="EPSG:3826", transform=from_origin(0, 2, 1, 1)) as dst:
+        dst.write(np.ones((1, 2, 2), np.uint8))
+
+
+def test_readable_candidates_skip_hidden_and_unreadable_files(step4, tmp_path, caplog):
+    _write_scene(tmp_path / "a0000101.img")
+    (tmp_path / "a0000103.img").write_text("not a raster")
+    (tmp_path / "._a0000101.img").write_bytes(b"\x00\x05\x16\x07")   # macOS AppleDouble file
+    (tmp_path / "notes.txt").write_text("not a scene")
+    with caplog.at_level("WARNING"):
+        assert step4.readable_candidates(str(tmp_path)) == ["a0000101.img"]
+    assert "a0000103.img" in caplog.text
+    assert "._a0000101.img" not in caplog.text
+
+
+def test_step4_stops_when_no_candidate_can_be_opened(step4, tmp_path):
+    (tmp_path / "a0000101.img").write_text("not a raster")
+    (tmp_path / "a0000103.img").write_text("not a raster")
+    with pytest.raises(RuntimeError, match="None of the 2 candidate scenes"):
+        step4.readable_candidates(str(tmp_path))
+
+
+def test_empty_candidate_folder_is_left_to_step4(step4, tmp_path):
+    assert step4.readable_candidates(str(tmp_path)) == []
+
+
+def test_main_uses_the_candidate_and_pan_name_helpers(step4):
+    import inspect
+    source = inspect.getsource(step4.main)
+    assert "readable_candidates(candidate_img_path)" in source
+    assert "pan_counterpart(fName)" in source
+    assert "find('0')" not in source

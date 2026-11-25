@@ -338,6 +338,20 @@ def find_raster_intersect(raster1,raster2,res,scale_factor):
     res_union_new.to_file('res_union_new.shp') 
     return array1, array2, col1, row1, intersection,gt,intersection_points,union_gt,union_m,union_conn,res_union_new#,image1_dsf,image2_dsf
    
+def require_blend_region(im_floodfill, image1_ds, image2_ds):
+    """Stop when the seamline does not split the overlap into two sides.
+
+    The flood fill from the canvas corner then reaches every pixel and leaves
+    no blend region. Blending with that empty mask would silently keep only
+    one of the two images, so stop with a clear message instead.
+    """
+    if not np.any(im_floodfill):
+        raise ValueError(
+            f"Step 2: the seamline between {image1_ds} and {image2_ds} does not "
+            "split their overlap, so no blend mask can be built. The overlap may "
+            "be too small, or the seamline may run along its edge.")
+
+
 def blend_mask_coverage(image, mask):
     """Return the valid-pixel fraction of a mask, or zero for an empty mask."""
     count = np.count_nonzero(mask)
@@ -1480,6 +1494,7 @@ def main():
                 mask = np.zeros((h+2, w+2), np.uint8)
                 cv2.floodFill(im_floodfill, mask, (1,1), 0)   
 
+            require_blend_region(im_floodfill, image1_ds, image2_ds)
             num_objects, labels = cv2.connectedComponents(im_floodfill, connectivity=8)
             classN=[np.sum(labels==a) for a in range(num_objects)]
             classN_ind=np.argsort(classN) 
@@ -1815,6 +1830,7 @@ def main():
                 cv2.floodFill(im_floodfill, mask, (1,1), 0)
 
 
+            require_blend_region(im_floodfill, image1_ds, image2_ds)
             num_objects, labels = cv2.connectedComponents(im_floodfill, connectivity=8)
             classN=[np.sum(labels==i) for i in range(num_objects)]
             classN_ind=np.argsort(classN) 

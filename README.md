@@ -7,6 +7,7 @@
 [![Paper](https://img.shields.io/badge/Paper-10.1016%2Fj.acags.2026.100387-0A7BBB.svg?style=flat-square)](https://doi.org/10.1016/j.acags.2026.100387)
 [![Software DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23404699.svg)](https://doi.org/10.5281/zenodo.23404699)
 [![Documentation website](https://img.shields.io/badge/documentation-website-0A7BBB.svg?style=flat-square)](https://buckai-observatory.org/Automated-Cloud-Removal-and-Seamless-Satellite-Image-Mosaicking-Pipeline/)
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/buckai-observatory/Automated-Cloud-Removal-and-Seamless-Satellite-Image-Mosaicking-Pipeline/blob/main/notebooks/sentinel2_walkthrough.ipynb)
 [![Try it: CloudPeel](https://img.shields.io/badge/try%20it-CloudPeel-2E8B57.svg?style=flat-square)](https://buckai-observatory.org/Automated-Cloud-Removal-and-Seamless-Satellite-Image-Mosaicking-Pipeline/cloudpeel/)
 
 An end-to-end, largely automated pipeline that turns individual orthorectified satellite scenes into a single color-balanced, seamless, cloud-filled mosaic — for both the multispectral (XS) and panchromatic (Pan) products, together with a mosaic-wide cloud mask.
@@ -16,6 +17,7 @@ Documentation website, with every step's README and an API reference generated f
 **Try it**
 
 - **In your browser, nothing to install:** [CloudPeel](https://buckai-observatory.org/Automated-Cloud-Removal-and-Seamless-Satellite-Image-Mosaicking-Pipeline/cloudpeel/) shows mosaics made with this pipeline before and after cloud filling; change the cloud tolerance and SSIM threshold and see the result change.
+- **In Colab, nothing to install:** the [walkthrough notebook](notebooks/sentinel2_walkthrough.ipynb) runs Steps 2–4 on free Sentinel-2 imagery with figures after each step; [open it in Colab](https://colab.research.google.com/github/buckai-observatory/Automated-Cloud-Removal-and-Seamless-Satellite-Image-Mosaicking-Pipeline/blob/main/notebooks/sentinel2_walkthrough.ipynb) and choose *Runtime → Run all* (about 5 minutes).
 - **On your computer:** after [installation](#installation), `python examples/sentinel2_demo/run_demo.py --workdir demo_output` runs Steps 2–4 on free Sentinel-2 imagery (see [Try it: Sentinel-2 demo](#try-it-sentinel-2-demo)).
 
 If you use this code, please cite the accompanying paper:
@@ -286,6 +288,7 @@ step4_cloud_removal/   cloud-filling script, para_cld.txt template
 docs/                  troubleshooting notes
 tests/                 unit tests (pytest)
 examples/              Sentinel-2 demo of Steps 2-4; CloudPeel web explorer
+notebooks/             walkthrough notebook of Steps 2-4 (runs in Colab)
 paper.md               JOSS paper source
 ```
 

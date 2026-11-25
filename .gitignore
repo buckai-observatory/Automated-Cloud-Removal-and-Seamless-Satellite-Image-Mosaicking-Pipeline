@@ -47,3 +47,4 @@ dist/
 examples/cloudpeel/site/data/
 examples/cloudpeel/work/
 examples/cloudpeel/media/
+notebooks/executed.ipynb

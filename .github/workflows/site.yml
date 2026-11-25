@@ -12,6 +12,7 @@ on:
     paths:
       - '**.md'
       - 'docs/paper/**'
+      - 'notebooks/*.ipynb'
       - 'site/**'
       - 'step2_mosaic/*.py'
       - 'step3_pan_mosaic/*.py'
@@ -23,6 +24,7 @@ on:
     paths:
       - '**.md'
       - 'docs/paper/**'
+      - 'notebooks/*.ipynb'
       - 'site/**'
       - 'step2_mosaic/*.py'
       - 'step3_pan_mosaic/*.py'

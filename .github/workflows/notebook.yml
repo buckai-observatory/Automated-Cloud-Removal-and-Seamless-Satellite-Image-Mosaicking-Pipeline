@@ -1,0 +1,45 @@
+name: walkthrough-notebook
+
+# Runs notebooks/sentinel2_walkthrough.ipynb from top to bottom on public
+# Sentinel-2 data. The install steps repeat the notebook's Colab set-up cell
+# on a fresh Ubuntu runner with Colab's Python version, starting from a newer
+# OpenCV as Colab ships one. Needs internet access to Earth Search, so it runs
+# when the notebook changes, monthly and on demand.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 7 1 * *"
+  pull_request:
+    paths:
+      - 'notebooks/**'
+      - 'examples/sentinel2_demo/run_demo.py'
+      - 'requirements.txt'
+      - '.github/workflows/notebook.yml'
+
+jobs:
+  notebook:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Start from a newer OpenCV, as on Colab
+        run: pip install -q "opencv-python-headless>=4.11"
+      - name: Install as the notebook's Colab cell does
+        run: |
+          sudo apt-get -qq update && sudo apt-get -qq install -y gdal-bin
+          pip uninstall -y -q opencv-python opencv-python-headless opencv-contrib-python
+          pip install -q -r requirements.txt
+          python -c "import cv2; assert cv2.__version__.startswith('4.10'), cv2.__version__; print('OpenCV', cv2.__version__)"
+      - name: Install Jupyter and pandas
+        run: pip install -q nbconvert ipykernel pandas
+      - name: Run the notebook
+        working-directory: notebooks
+        run: jupyter nbconvert --to notebook --execute --output executed.ipynb --ExecutePreprocessor.timeout=1800 sentinel2_walkthrough.ipynb
+      - name: Upload the executed notebook
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: executed-notebook
+          path: notebooks/executed.ipynb

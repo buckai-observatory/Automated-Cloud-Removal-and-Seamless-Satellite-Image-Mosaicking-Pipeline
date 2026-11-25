@@ -448,7 +448,7 @@ def main():
                                     # If 1 exists in border; then skip the cld file.
                                     if np.any(border_elems_generic(cld,1)==1)==False:# to prevent replicated cld mask from reprocessing several times.
 
-                                        cldbList=glob.glob(''.join(str(pathlib.Path().absolute()))+os.sep+cloud_mask_folder+os.sep+'*'+fName[:-4]+'*.tif')
+                                        cldbList=sorted(glob.glob(''.join(str(pathlib.Path().absolute()))+os.sep+cloud_mask_folder+os.sep+'*'+fName[:-4]+'*.tif'))
                                         if not cldbList:
                                             raise FileNotFoundError(f"No candidate cloud mask for {fName} in {cloud_mask_folder}")
                                         with rasterio.open(cldbList[0]) as cldb_ds:

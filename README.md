@@ -197,17 +197,30 @@ step4/
 └── cldDatabase/                           # empty working folder
 ```
 
-Two `para_cld.txt` settings control which candidates are used:
-
 Replace the template's `YOUR_PATH` placeholders with your paths. On macOS and
 Linux use forward slashes, for example `"CandiImgPath": "/data/cloud_database"`;
 forward slashes also work on Windows (`"CandiImgPath": "D:/data/cloud_database"`).
 If using Windows backslashes in JSON, escape them as `\\` as the template does.
 
+Two `para_cld.txt` settings control which candidates are used:
+
 | Key | Meaning |
 |-----|---------|
 | `ssim_threshold` | Minimum SSIM between a candidate and the cloud-free surroundings of a patch (default `0.75`) |
 | `cloud_tolerance` | Maximum fraction of a patch that may be cloudy in the candidate itself (default `0.25`) |
+
+SSIM is computed with clouds and sea masked out in both images. A candidate
+that covers only part of a patch's window has 0.05 subtracted from its SSIM, so
+it needs a raw SSIM of at least `ssim_threshold + 0.05` to be used.
+
+> **Changed after v1.1.0:** up to v1.1.0 the 0.05 penalty was also applied to
+> candidates that cover the whole window, and sea was masked out only in the
+> candidate (fixed in #72 and #77). With the same settings, Step 4 can therefore
+> choose different candidates than v1.1.0, mainly when a candidate's SSIM is just
+> above the threshold and in coastal patches, and the `ssim` values in
+> `fill_log.csv` are 0.05 higher for candidates that cover the whole window.
+> These two fixes do not change which candidates fill the Sentinel-2 demo's
+> patches.
 
 Step 4 adds one to the numeric part of the candidate XS scene name to find its
 Pan counterpart. For example, `A0000001.img` uses

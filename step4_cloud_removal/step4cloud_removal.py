@@ -55,6 +55,42 @@ def pan_scene_path(folder, name):
             return tif
     return os.path.join(folder, name, name + '_B1.DAT.raw')
 
+def pan_counterpart(name):
+    """Return the Pan scene name for candidate XS scene *name*: its number plus one.
+
+    Scene names are a start letter followed by a 7-digit scene number, e.g.
+    ``A0000101.img`` -> ``A0000102``. All seven digits are read, so numbers that
+    do not start with 0 (``A1000101``) also work, as in Step 3 (#82).
+    """
+    return name[0] + str(int(name[1:8]) + 1).zfill(7)
+
+def readable_candidates(folder):
+    """Return the candidate XS scenes (``.img``) in *folder* that can be opened.
+
+    Hidden files, such as the ``._*`` copies macOS writes on external drives,
+    are ignored. An unreadable scene is reported once and left out. If there
+    are scenes but none can be opened, stop with an error instead of finishing
+    with every cloud patch unfilled.
+    """
+    names, unreadable = [], []
+    for f in listdir(folder):
+        path = join(folder, f)
+        if f.startswith('.') or not f.endswith('.img') or not isfile(path):
+            continue
+        try:
+            with rasterio.open(path):
+                pass
+        except rasterio.errors.RasterioIOError as error:
+            logger.warning("Candidate scene %s cannot be opened and is skipped: %s", f, error)
+            unreadable.append(f)
+            continue
+        names.append(f)
+    if unreadable and not names:
+        raise RuntimeError(
+            f"None of the {len(unreadable)} candidate scenes in {folder} can be opened "
+            f"(first: {unreadable[0]}). Check CandiImgPath in para_cld.txt and the files.")
+    return names
+
 def patch_margins(x, y, w, h, shape, pad=10):
     """Margins around a cloud bounding box, clipped to an array of *shape*.
 
@@ -333,12 +369,7 @@ def main():
                         dst.write(labelscy2.astype(rasterio.uint8), 1)
 
         if i ==0:
-            files = listdir(candidate_img_path)
-            file=[]
-            for f in files:
-              fullpath1 = join(candidate_img_path, f)
-              if isfile(fullpath1) and  f.endswith(".img"):
-                file.append(f)
+            file = readable_candidates(candidate_img_path)
 
 
         files = listdir(cloud_work_path)
@@ -560,7 +591,7 @@ def main():
                                                     bigpan = mosaic_pan.read(1, window=pan_window)
 
                                                 #read pan_imagePool which is cldb mask's counterpart
-                                                PAN_fName=fName[0]+str(int(fName[fName.find('0'):fName.find('0')+7])+1).zfill(7)
+                                                PAN_fName=pan_counterpart(fName)
                                                 with rasterio.open(pan_scene_path(Pan_Addr, PAN_fName)) as pan_imagePool:
                                                     smallpan=pan_imagePool.read(1,window= from_bounds(win_transform[2], win_transform[5]-ints_window.height*res, win_transform[2]+ints_window.width*res, win_transform[5], pan_imagePool.transform))
                                                 if smallpan.shape != mask_blurred_pan_chan.shape or bigpan.shape != mask_blurred_pan_chan.shape:

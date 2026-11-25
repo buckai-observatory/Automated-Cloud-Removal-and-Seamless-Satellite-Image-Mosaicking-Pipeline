@@ -50,9 +50,12 @@ def test_repository_pages_build_with_locale_and_utf8_modes(tmp_path, utf8_mode):
     output = tmp_path / "生成的文档 café"
     run_builder(output, utf8_mode)
     home = (output / "index.md").read_text(encoding="utf-8")
-    assert "cloud-filled mosaic — for both" in home
-    assert "nothing to install" in home
-    assert "[CloudPeel](" in home
+    # Every non-ASCII character of the README (such as "—") survives the build;
+    # taken from the README itself, so editing its wording does not break this.
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    non_ascii = {c for c in readme if ord(c) > 127}
+    assert non_ascii
+    assert non_ascii <= set(home)
     assert (output / "step4_cloud_removal.md").is_file()
     assert (output / "_quarto.yml").is_file()
     assert (output / "api" / "_sidebar.yml").is_file()

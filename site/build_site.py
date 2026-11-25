@@ -18,7 +18,8 @@ New files in docs/ appear on the site and in its navbar without further
 changes.
 Source Markdown and generated text files use UTF-8 on every platform.
 
-Usage (from the repository root, with quartodoc installed):
+Usage (from the repository root, after `pip install "quartodoc>=0.10" "griffe<2"`
+as in .github/workflows/site.yml; quartodoc 0.11 does not work with griffe 2):
     python3 site/build_site.py
     cd site/_build
     PYTHONPATH=../../step2_mosaic:../../step3_pan_mosaic:../../step4_cloud_removal python -m quartodoc build

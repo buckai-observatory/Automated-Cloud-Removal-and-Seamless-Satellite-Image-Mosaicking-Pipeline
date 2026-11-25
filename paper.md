@@ -113,8 +113,9 @@ overlap is too large to search. Step 2 instead downsamples the overlap by a
 user-set factor (`resampleTo`, typically 5) and erodes the valid area with a
 shrink kernel. It then builds a NetworkX graph only over pixels that are valid
 in both scenes. Edge weights are inverse local intensity differences in both
-images (four cost functions, `a6`, `a7`, `a6c` and `a7c`, are selectable). The
-cheapest path therefore follows strong edges such as rivers, roads and field
+images (six cost functions are selectable: `a6`, `a7`, `a6c` and `a7c`, and
+`a6c_int` and `a7c_int`, which use the same formulas without 8-bit
+wraparound). The cheapest path therefore follows strong edges such as rivers, roads and field
 boundaries, where a seam is least visible. Start and end nodes come from the
 geometric intersection of the two scenes' footprint boundaries, which handles
 irregular, non-rectangular swaths. The trade-off is a coarser seamline in

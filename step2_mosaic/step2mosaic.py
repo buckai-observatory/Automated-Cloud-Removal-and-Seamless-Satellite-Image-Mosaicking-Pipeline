@@ -50,18 +50,37 @@ def assign_crs_copy(src_path, dst_path, crs):
     """Copy a scene to GeoTIFF with *crs* assigned (not reprojected), via gdal_translate."""
     run_tool(['gdal_translate', '-a_srs', crs, '-of', 'GTiff', src_path, dst_path])
 
+def on_windows():
+    return os.name == 'nt'
+
+# MATLAB Runtime R2018a (v9.4) folders that BndPolygonize_v.bat adds to PATH.
+MATLAB_RUNTIMES = [r'C:\Program Files\MATLAB\MATLAB Runtime\v94\runtime\win64',
+                   r'C:\Program Files\MATLAB\R2018a\runtime\win64']
+
+def original_boundary_tool_available(tool_dir):
+    """True if the original Windows boundary tool in *tool_dir* can run.
+
+    BndPolygonize_v.bat runs GetBoundaryMask.exe, which needs MATLAB Runtime
+    R2018a (v9.4), and the GDAL tools and Python from a bin\\ folder next to
+    it. The repository ships only the .exe and the .bat, so without the rest
+    Step 2 uses its Python polygonizer instead.
+    """
+    return (on_windows()
+            and (tool_dir / 'GetBoundaryMask.exe').is_file()
+            and (tool_dir / 'bin' / 'gdalinfo.exe').is_file()
+            and any(os.path.isdir(p) for p in MATLAB_RUNTIMES))
+
 def polygonize_valid_area(tif_path):
     """Write <name>.temp.shp outlining the valid (non-zero) footprint of a scene.
 
-    On Windows with the bundled GetBoundaryMask.exe this calls
-    BndPolygonize_v.bat as before; elsewhere, or when the path contains a
-    space (which the batch file cannot handle), it uses an equivalent
-    rasterio/geopandas implementation.
+    On Windows, when the original boundary tool is complete (see
+    original_boundary_tool_available), this calls BndPolygonize_v.bat as
+    before; otherwise, or when the path contains a space (which the batch file
+    cannot handle), it uses an equivalent rasterio/geopandas implementation.
     """
     tool_dir = pathlib.Path('NSPO_GRID_vectorization').absolute()
     bat = tool_dir / 'BndPolygonize_v.bat'
-    if (os.name == 'nt' and (tool_dir / 'GetBoundaryMask.exe').is_file()
-            and ' ' not in str(bat) + str(tif_path)):
+    if original_boundary_tool_available(tool_dir) and ' ' not in str(bat) + str(tif_path):
         run_tool(['cmd', '/c', bat, tif_path])
         return
     with rasterio.open(tif_path) as src:

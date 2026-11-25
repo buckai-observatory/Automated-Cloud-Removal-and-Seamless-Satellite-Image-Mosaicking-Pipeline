@@ -50,3 +50,29 @@ def test_step_header_comes_before_step_output_in_a_log(tmp_path):
     # stdout is a pipe, as when the demo runs in CI or with its output sent to a file.
     out = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, check=True).stdout
     assert out.index("=== Running") < out.index("step output")
+
+
+def test_catalogue_requests_also_trust_certifi(demo, monkeypatch):
+    # A Python without a certificate store (the python.org macOS installer
+    # before its "Install Certificates" step) has no CAs in its default context;
+    # certifi's bundle is added so the demo download can still verify servers.
+    import ssl
+    empty = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    assert empty.cert_store_stats()["x509_ca"] == 0
+    monkeypatch.setattr(demo.ssl, "create_default_context", lambda: empty)
+    context = demo.ssl_context()
+    assert context is empty and context.cert_store_stats()["x509_ca"] > 0
+
+
+def test_scene_download_uses_the_context(demo, monkeypatch):
+    import ssl
+    seen = {}
+
+    def fake_urlopen(url, context=None):
+        seen["context"] = context
+        raise RuntimeError("stop before downloading")
+
+    monkeypatch.setattr(demo.urllib.request, "urlopen", fake_urlopen)
+    with pytest.raises(RuntimeError, match="stop before downloading"):
+        demo.prepare_scene("a0000001", "S2A_item", demo.AOI, None, None, None)
+    assert isinstance(seen["context"], ssl.SSLContext)

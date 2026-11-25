@@ -185,3 +185,53 @@ def test_both_blend_mask_builders_check_for_a_blend_region(step2):
     import inspect
     source = inspect.getsource(step2.main)
     assert source.count("require_blend_region(im_floodfill, image1_ds, image2_ds)") == 2
+
+
+def _boundary_tool(directory, with_bin):
+    tool = directory / "NSPO_GRID_vectorization"
+    tool.mkdir()
+    (tool / "GetBoundaryMask.exe").write_bytes(b"")
+    (tool / "BndPolygonize_v.bat").write_text("")
+    if with_bin:
+        (tool / "bin").mkdir()
+        (tool / "bin" / "gdalinfo.exe").write_bytes(b"")
+    return tool
+
+
+def test_shipped_boundary_tool_alone_falls_back_to_python(step2, tmp_path, monkeypatch):
+    # The repository ships only GetBoundaryMask.exe and the .bat. On Windows
+    # without the batch file's bin\ toolkit, Step 2 must use its Python
+    # polygonizer rather than run a .bat that cannot work.
+    import geopandas as gpd
+    import rasterio
+    from rasterio.transform import from_origin
+
+    data = np.zeros((1, 20, 30), np.uint16)
+    data[:, 5:15, 5:25] = 500
+    tif = tmp_path / "scene.tif"
+    with rasterio.open(tif, "w", driver="GTiff", width=30, height=20, count=1, dtype="uint16",
+                       crs="EPSG:3826", transform=from_origin(1000, 2000, 10, 10)) as dst:
+        dst.write(data)
+    _boundary_tool(tmp_path, with_bin=False)
+    runtime = tmp_path / "runtime"
+    runtime.mkdir()
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(step2, "MATLAB_RUNTIMES", [str(runtime)])
+    monkeypatch.setattr(step2, "on_windows", lambda: True)
+    monkeypatch.setattr(step2, "run_tool", lambda args: pytest.fail(f"ran {args}"))
+    step2.polygonize_valid_area(str(tif))
+    assert gpd.read_file(tmp_path / "scene.temp.shp").area.iloc[0] == 10 * 20 * 10 * 10
+
+
+def test_complete_boundary_tool_is_used_only_on_windows_with_matlab(step2, tmp_path, monkeypatch):
+    tool = _boundary_tool(tmp_path, with_bin=True)
+    runtime = tmp_path / "runtime"
+    runtime.mkdir()
+    monkeypatch.setattr(step2, "MATLAB_RUNTIMES", [str(runtime)])
+    monkeypatch.setattr(step2, "on_windows", lambda: True)
+    assert step2.original_boundary_tool_available(tool)
+    monkeypatch.setattr(step2, "MATLAB_RUNTIMES", [str(tmp_path / "no-matlab")])
+    assert not step2.original_boundary_tool_available(tool)
+    monkeypatch.setattr(step2, "MATLAB_RUNTIMES", [str(runtime)])
+    monkeypatch.setattr(step2, "on_windows", lambda: False)
+    assert not step2.original_boundary_tool_available(tool)

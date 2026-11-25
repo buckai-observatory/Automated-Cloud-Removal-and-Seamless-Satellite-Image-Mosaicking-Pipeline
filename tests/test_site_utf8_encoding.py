@@ -40,8 +40,9 @@ def run_builder(output, utf8_mode, source=None):
     result = subprocess.run(command, env=env, capture_output=True, encoding="utf-8")
     assert result.returncode == 0, result.stdout + result.stderr
     assert json.loads(result.stdout.splitlines()[0])["utf8_mode"] == utf8_mode
+    # Generated text files only; binary assets such as the paper PDF are copied as they are.
     for path in output.rglob("*"):
-        if path.is_file():
+        if path.is_file() and path.suffix in {".md", ".qmd", ".yml", ".css"}:
             path.read_bytes().decode("utf-8")
 
 

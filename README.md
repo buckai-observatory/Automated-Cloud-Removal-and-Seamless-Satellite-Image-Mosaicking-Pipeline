@@ -72,10 +72,9 @@ source .venv/bin/activate
 python -m pip install -r requirements.txt
 ```
 
-The pip packages do not install all the GDAL commands used by the pipeline.
-Make sure `gdalwarp`, `gdal_translate`, `gdal_polygonize.py` and `gdal_edit.py`
-are available on `PATH`. On Windows, the conda environment above also provides
-these tools.
+The pip packages do not install the GDAL commands used by the pipeline.
+Make sure `gdalwarp` and `gdal_translate` are available on `PATH`. On Windows,
+the conda environment above also provides these tools.
 
 Alternatively, install the pipeline as a package (`pip install .` from a clone; it uses the same `requirements.txt`). This adds one command per step, each taking the prepared working folder (the folder with the step's parameter file) as its argument:
 
@@ -93,7 +92,7 @@ The folder must be prepared as for `python step*.py` (Step 2 also needs `NSPO_GR
 - **Python 3.10+** with the packages in `requirements.txt` (Steps 2–4 run on Windows, macOS and Linux)
 - **GDAL command-line tools** on `PATH` (`gdalwarp`, `gdal_translate`; conda-forge's `gdal` package provides them)
 - **Windows and ERDAS IMAGINE 2014** for Step 1 only: its workflow also runs Windows `.bat` and `.exe` tools, including `MappingReshapeXS.exe` (later ERDAS versions, e.g. 2018/2020, may produce wrong colors). Without this environment, start at Step 2 with scenes color-balanced by any other tool.
-- Optional, Windows only: **MATLAB Runtime R2018a (v9.4)** for the original `GetBoundaryMask.exe` used in Step 2. Elsewhere, or if it is missing, Step 2 uses an equivalent pure-Python footprint polygonizer.
+- Optional, Windows only: the original boundary tool in `NSPO_GRID_vectorization/`. Step 2 runs `GetBoundaryMask.exe` through `BndPolygonize_v.bat` only when **MATLAB Runtime R2018a (v9.4)** is installed and the batch file's `bin\` folder of GDAL tools and Python is present (it is not included in this repository). Otherwise, and on macOS and Linux, Step 2 uses an equivalent pure-Python footprint polygonizer.
 
 > **OpenCV version:** Step 4 needs OpenCV < 4.11. From 4.11 on, `cv2.seamlessClone` keeps the destination texture and clouds are not removed. `requirements.txt` pins this, and the test suite checks it.
 >

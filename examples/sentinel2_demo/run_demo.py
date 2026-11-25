@@ -17,6 +17,7 @@ import argparse
 import json
 import pathlib
 import shutil
+import ssl
 import subprocess
 import sys
 import urllib.request
@@ -121,13 +122,30 @@ def inside(corners, bounds, res):
     return geometry_mask([polygon], (height, width), transform, invert=True)
 
 
+def ssl_context():
+    """HTTPS context with the system certificates plus certifi's bundle.
+
+    certifi is installed with rasterio. Adding it lets the catalogue requests
+    work on Pythons without a usable certificate store, such as the python.org
+    macOS installer before its "Install Certificates" step, while keeping any
+    certificates the system adds (for example a company proxy's).
+    """
+    context = ssl.create_default_context()
+    try:
+        import certifi
+    except ImportError:
+        return context
+    context.load_verify_locations(cafile=certifi.where())
+    return context
+
+
 def prepare_scene(name, item_id, rect, xs_dir, mask_dir, pan_dir):
     print(f"  {name} <- {item_id}")
     if rect == AOI:
         corners, bounds = None, AOI
     else:
         corners, bounds = footprint(*rect)
-    item = json.load(urllib.request.urlopen(STAC_ITEM.format(item_id)))
+    item = json.load(urllib.request.urlopen(STAC_ITEM.format(item_id), context=ssl_context()))
     assets = item["assets"]
     # Processing baseline 04.00+ adds 1000 to every DN; Earth Search may already have removed it.
     props = item["properties"]

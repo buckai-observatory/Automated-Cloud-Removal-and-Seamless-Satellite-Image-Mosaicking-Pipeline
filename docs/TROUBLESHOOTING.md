@@ -40,4 +40,4 @@ The Pan scene extents must match their XS counterparts exactly, or the blend is 
 
 ## Step 4: repeated cloud filling
 
-Running Step 4 again with fresh candidates may or may not improve the result, but it is safe to try: update `cloud_database/`, `raw_pan/`, and the cloud-mask database (used scenes can be removed to save compute time). Only mask value `1` in `mosaic_cloudmask.tif` is processed — set values back to `1` manually for areas you want reprocessed; already-filled areas carry the value `(loop_index+1)*10`.
+Running Step 4 again with fresh candidates may or may not improve the result, but it is safe to try: update `cloud_database/`, `raw_pan/`, and the cloud-mask database (used scenes can be removed to save compute time). Only mask value `1` (cloud left unfilled) in `mosaic_cloudmask.tif` is processed. Filled pixels are set to `0`, and `(i + 1) * 10` marks land pixels that the candidate used for filling flags as cloudy in its own cloud mask (`i` is the Step 2 window index). To reprocess an area, set its values back to `1` manually.

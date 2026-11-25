@@ -1,8 +1,8 @@
 # Tested with Python 3.10-3.13.
 # rasterio/geopandas are easiest to install via conda:
 #   conda install -c conda-forge rasterio geopandas
-# The GDAL command-line tools (gdalwarp, gdal_translate, gdal_polygonize.py,
-# gdal_edit.py) must also be on PATH; they ship with conda-forge's `gdal`.
+# The GDAL command-line tools gdalwarp and gdal_translate must also be on PATH;
+# they ship with conda-forge's `gdal`.
 numpy
 # cv2.seamlessClone (Poisson blending, Step 4) keeps the destination texture
 # from OpenCV 4.11 on, which leaves clouds in place; 4.10 behaves correctly.

@@ -24,6 +24,8 @@ If you use this code, please cite the accompanying paper:
 
 > Hsu, H.-J., Tseng, K.-H., Tsai, F., Liu, C.-L., Lo, C.-C., & Moortgat, J. (2026). A novel approach to automated cloud removal and seamless multisensor satellite image mosaicking. *Applied Computing and Geosciences*, 31, 100387. https://doi.org/10.1016/j.acags.2026.100387
 
+The paper is open access: [PDF](docs/paper/Hsu_et_al_2026_Applied_Computing_and_Geosciences.pdf) (© 2026 The Authors; published by Elsevier under the [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) license).
+
 To cite the software itself, use its Zenodo archive: https://doi.org/10.5281/zenodo.23404699 (all versions; each release also has its own DOI).
 
 ---
@@ -158,11 +160,14 @@ step2/
 | `canvas_crs` | CRS of the mosaic canvas (e.g. `EPSG:3826`) |
 | `canvas_x_max` | Eastern bound of the mosaic canvas (map units) |
 | `canvas_y_min` | Southern bound of the mosaic canvas (map units) |
+| `startScene` | Optional. Scene to start the mosaic from, e.g. `a0000003` (with or without `.img`). Default: the scene whose name sorts first. |
 
 The supplied `para.txt` and Sentinel-2 demo deliberately use `a6c` to keep the
 historical arithmetic used for the paper's method. Set `path_method` to
 `a6c_int` explicitly for new runs that should avoid uint8 wraparound; this can
 change the selected seamline.
+
+Processing order: Step 2 starts from the scene whose file name sorts first (alphabetically) and adds the others in order of distance from it. Name the scenes so that the one you want to start from, usually a central scene, sorts first, or set `startScene` in `para.txt`. The order is written to `ProcessOrder.txt` and is the same on every operating system.
 
 Outputs: `mosaic_xs.tif` (XS mosaic), `mosaic_cloudmask.tif` (cloud mask mosaic), `ProcessOrder.txt`, `transform.npy`, `allWindow.npy`, `ImgInd.npy`, `Union_gt.npy`, and two rasters per seamline:
 

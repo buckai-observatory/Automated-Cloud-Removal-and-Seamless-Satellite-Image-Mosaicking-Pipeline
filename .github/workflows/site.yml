@@ -11,6 +11,7 @@ on:
     branches: [main]
     paths:
       - '**.md'
+      - 'docs/paper/**'
       - 'notebooks/*.ipynb'
       - 'site/**'
       - 'step2_mosaic/*.py'
@@ -22,6 +23,7 @@ on:
   pull_request:
     paths:
       - '**.md'
+      - 'docs/paper/**'
       - 'notebooks/*.ipynb'
       - 'site/**'
       - 'step2_mosaic/*.py'

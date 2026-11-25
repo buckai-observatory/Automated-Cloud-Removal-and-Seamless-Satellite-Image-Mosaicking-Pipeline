@@ -57,7 +57,7 @@ for f in sorted((REPO / "docs").glob("*.md")):
 for name in PROJECT:
     if (REPO / name).exists():
         PAGES[name] = name
-ASSETS = []                                            # copied into the site as they are
+ASSETS = ["docs/paper"]                                # copied into the site as they are (the open-access paper PDF)
 NOTEBOOK_NAMES = {"sentinel2_walkthrough": "Walkthrough notebook"}   # navbar names; default: file stem
 
 

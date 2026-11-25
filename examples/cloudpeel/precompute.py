@@ -127,8 +127,8 @@ def warp_to_web(src_path, resampling, bands=None, is_mask=False):
             reproject(rasterio.band(src, b), out[i], dst_transform=transform,
                       dst_crs=WEB_CRS, resampling=resampling,
                       src_nodata=src_nodata, dst_nodata=dst_nodata)
-        left, top = transform * (0, 0)
-        right, bottom = transform * (width, height)
+        left, top = transform @ (0, 0)
+        right, bottom = transform @ (width, height)
         w, s, e, n = transform_bounds(WEB_CRS, "EPSG:4326", left, bottom, right, top)
     return out, [[s, w], [n, e]]
 

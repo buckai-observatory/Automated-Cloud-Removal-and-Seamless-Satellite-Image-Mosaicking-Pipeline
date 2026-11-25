@@ -76,10 +76,15 @@ def write_scene(demo, name, rect, xs_dir, mask_dir, pan_dir, brightness):
         corners, bounds = None, AOI
     else:
         corners, bounds = demo.footprint(*rect)
-    valid = demo.inside(corners, bounds, demo.XS_RES) if corners else True
     xs = np.clip(ground(bounds, demo.XS_RES) * brightness, 1, 4095).astype(np.uint16)
 
     transform, width, height = demo.grid(bounds, demo.XS_RES)
+    # A boolean array in both cases: ~ on the Python bool True is -2, which
+    # zeroed the second-to-last column of the full-AOI scene.
+    if corners:
+        valid = demo.inside(corners, bounds, demo.XS_RES)
+    else:
+        valid = np.ones((height, width), bool)
     cols, rows = np.meshgrid(np.arange(width), np.arange(height))
     x = transform.c + (cols + 0.5) * transform.a
     y = transform.f + (rows + 0.5) * transform.e

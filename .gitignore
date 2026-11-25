@@ -36,6 +36,7 @@ Step2SPOTf.bat
 paper.pdf
 jats/
 demo_output/
+columbus_output/
 demo output/
 # documentation website build (site/build_site.py)
 site/_build/
@@ -47,7 +48,7 @@ dist/
 examples/cloudpeel/site/data/
 examples/cloudpeel/work/
 examples/cloudpeel/media/
-notebooks/executed.ipynb
+notebooks/executed*.ipynb
 
 # pixi environments (pixi.lock is committed)
 .pixi/

@@ -69,3 +69,8 @@ relative to the folder you run from:
 ```bash
 python examples/sentinel2_demo/run_demo.py --skip-download --workdir demo_output
 ```
+
+Data downloaded before 25 November 2026 (v1.1.0 and earlier) names the strips
+differently: there `a0000001` is the west strip. Step 2 would start from it and
+fill only about a quarter of the cloudy area, so run once without
+`--skip-download` to download the data again.

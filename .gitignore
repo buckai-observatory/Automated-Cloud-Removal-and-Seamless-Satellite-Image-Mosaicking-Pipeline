@@ -48,3 +48,7 @@ examples/cloudpeel/site/data/
 examples/cloudpeel/work/
 examples/cloudpeel/media/
 notebooks/executed.ipynb
+
+# pixi environments (pixi.lock is committed)
+.pixi/
+.ipynb_checkpoints/

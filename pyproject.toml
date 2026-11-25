@@ -51,3 +51,74 @@ tag_regex = '^v(?P<version>\d+(?:\.\d+)*)$'
 
 [tool.setuptools_scm.scm.git]
 describe_command = ["git", "describe", "--dirty", "--tags", "--long", "--match", "v[0-9]*"]
+
+# ---------------------------------------------------------------------------
+# pixi: a locked, cross-platform environment (https://pixi.sh).
+#   pixi install --locked                      # pipeline + GDAL tools
+#   pixi run --locked test                     # test suite
+#   pixi run --locked demo                     # Sentinel-2 demo of Steps 2-4
+#   pixi run --locked -e notebook lab          # JupyterLab for notebooks/
+# pixi.lock pins every package for macOS (Apple silicon and Intel), Linux and
+# Windows, so all machines get the same versions. The GDAL command-line tools
+# (gdalwarp, gdal_translate) come from conda-forge's gdal package.
+# ---------------------------------------------------------------------------
+[tool.pixi.workspace]
+name = "cloud-removal-mosaicking"
+channels = ["conda-forge"]
+platforms = ["osx-arm64", "osx-64", "linux-64", "win-64"]
+
+# Mirrors requirements.txt, resolved from conda-forge; keep the two in sync.
+[tool.pixi.dependencies]
+python = ">=3.10,<3.14"
+gdal = "*"                 # libgdal and the command-line tools
+numpy = "*"
+rasterio = "*"
+affine = ">=3.0"
+geopandas = "*"
+shapely = "*"
+networkx = "*"
+scipy = "*"
+scikit-image = ">=0.19"
+matplotlib-base = "*"
+tqdm = "*"
+certifi = "*"
+pip = "*"
+
+# OpenCV comes from PyPI: requirements.txt asks for opencv-python < 4.11
+# (cv2.seamlessClone changed in 4.11), and the package itself is installed
+# in editable mode so the mosaic-step2/3/4 commands work.
+[tool.pixi.pypi-dependencies]
+opencv-python = ">=4.5,<4.11"
+cloud-removal-mosaicking = { path = ".", editable = true }
+
+[tool.pixi.feature.test.dependencies]
+pytest = "*"
+
+[tool.pixi.feature.notebook.dependencies]
+jupyterlab = ">=4"
+ipykernel = "*"
+pandas = "*"
+nbconvert = "*"
+
+# Jupyter looks for kernels in the user's own folder (e.g. ~/Library/Jupyter
+# on macOS) before the environment's. A "python3" kernel there, left by
+# another installation, would then run the notebooks with a Python that lacks
+# this pipeline. JUPYTER_PATH puts the environment's own kernel first.
+[tool.pixi.feature.notebook.activation.env]
+JUPYTER_PATH = "$CONDA_PREFIX/share/jupyter"
+
+[tool.pixi.feature.notebook.target.win-64.activation.env]
+JUPYTER_PATH = "%CONDA_PREFIX%\\share\\jupyter"
+
+[tool.pixi.environments]
+default = { features = [], solve-group = "default" }
+test = { features = ["test"], solve-group = "default" }
+notebook = { features = ["notebook", "test"], solve-group = "default" }
+
+[tool.pixi.tasks]
+# Named `lab`, not `jupyter`: a task named after an executable would shadow it.
+lab = { cmd = "jupyter lab notebooks/sentinel2_walkthrough.ipynb", description = "Open the walkthrough notebook in JupyterLab (use -e notebook)" }
+demo = { cmd = "python examples/sentinel2_demo/run_demo.py --workdir demo_output --check", description = "Run the Sentinel-2 demo of Steps 2-4" }
+
+[tool.pixi.feature.test.tasks]
+test = { cmd = "pytest", description = "Run the test suite" }

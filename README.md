@@ -53,16 +53,44 @@ Outputs after Step 4:
 
 ## Installation
 
+**Recommended: [pixi](https://pixi.sh), with the locked environment.** One
+command installs Python, GDAL (including the `gdalwarp` and `gdal_translate`
+commands) and every dependency at the exact versions in `pixi.lock`, the same
+on macOS (Apple silicon and Intel), Linux and Windows. Nothing else needs to
+be installed, and it does not touch other Python or conda installations.
+
 ```bash
-# Create a conda environment (recommended)
-conda create -n mosaic python=3.12
-conda activate mosaic
+# install pixi once: https://pixi.sh (macOS/Linux shown; see the site for Windows)
+curl -fsSL https://pixi.sh/install.sh | sh
 
-# Install geospatial libraries via conda-forge
-conda install -c conda-forge gdal rasterio geopandas shapely
+git clone https://github.com/buckai-observatory/Automated-Cloud-Removal-and-Seamless-Satellite-Image-Mosaicking-Pipeline.git cloud-mosaic
+cd cloud-mosaic
+pixi install --locked                  # pipeline + GDAL tools
+pixi run --locked demo                 # Sentinel-2 demo of Steps 2-4 (downloads ~350 MB)
+pixi run --locked -e test test         # test suite
+pixi run --locked -e notebook lab      # open the walkthrough notebook in JupyterLab
+```
 
-# Install remaining packages
-pip install -r requirements.txt
+**On Windows, clone into a short folder name** such as `cloud-mosaic`, as above.
+Windows limits file paths to 260 characters unless long paths are enabled, and the
+environment is installed inside the clone (`.pixi\`). With the repository's full
+name as the folder, some installed files (for example JupyterLab's) exceed that
+limit and `pixi install` fails with "The system cannot find the path specified".
+Alternatively, an administrator can
+[enable long paths](https://learn.microsoft.com/windows/win32/fileio/maximum-file-path-limitation#enable-long-paths-in-windows-10-version-1607-and-later).
+
+Commands run inside the environment with `pixi run --locked <command>`, for
+example `pixi run --locked mosaic-step2 path/to/step2_folder`, or open a shell
+in it with `pixi shell`. A CI workflow installs this locked environment on
+clean macOS, Windows and Linux machines and runs the tests and the demo there.
+
+**With mamba or conda** ([Miniforge](https://github.com/conda-forge/miniforge)
+provides `mamba`; `conda` works the same way):
+
+```bash
+mamba create -n mosaic -c conda-forge python=3.12 gdal rasterio geopandas shapely
+mamba activate mosaic
+pip install -r requirements.txt   # remaining packages, including OpenCV < 4.11
 ```
 
 On macOS or Linux, a virtual environment with pip is another option (including

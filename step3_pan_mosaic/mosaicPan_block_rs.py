@@ -177,7 +177,7 @@ def main():
 
             mosaic_out= rasterio.open(
                 'mosaic_pan.tif',
-                'w+',
+                'w+', driver='GTiff',
                 height= int( ( float(max( gt_five))-  canvas_y_min   )/res ),
                 width=  int( (   canvas_x_max-  float(min( gt_two)   ))/res ),
                 count=1,

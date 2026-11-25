@@ -125,6 +125,24 @@ def raise_clipped_zeros(blended, candidate, region):
     blended[(blended==0) & (candidate>0) & region]=1
     return blended
 
+def keep_outside_nodata(blended, mosaic):
+    """Keep the mosaic's no-data (0 in every band, outside every scene) as no-data.
+
+    A cloud patch is cut from the dilated cloud mask, and the final feathering
+    mixes the filled patch with the mosaic through a blurred mask that reaches
+    further. Both can extend past the edge of the mosaic, where the mosaic is
+    0, and the fill would then write a darkened copy of the candidate outside
+    the mosaic. Cloud pixels always lie inside a scene, so this never undoes a
+    fill. *blended* and *mosaic* are (bands, rows, cols) or (rows, cols);
+    *blended* is modified in place and returned.
+    """
+    outside = (mosaic == 0) if mosaic.ndim == 2 else np.all(mosaic == 0, axis=0)
+    if blended.ndim == 2:
+        blended[outside] = 0
+    else:
+        blended[:, outside] = 0
+    return blended
+
 def image_dtype(true_bits):
     """Return the smallest unsigned storage dtype that fits the sensor bit depth."""
     if not 1 <= true_bits <= 64:
@@ -576,7 +594,7 @@ def main():
 
                                             if code==0:
 
-                                                outcome=outcome.astype(imgtype)
+                                                outcome=keep_outside_nodata(outcome.astype(imgtype), mosaic_rgb)
                                                 win_transform = mosaic_xs.window_transform(ints_window)
                                                 mosaic_xs.close()
 
@@ -597,6 +615,7 @@ def main():
                                                 if smallpan.shape != mask_blurred_pan_chan.shape or bigpan.shape != mask_blurred_pan_chan.shape:
                                                     raise ValueError('Pan inputs do not cover the complete cloud patch')
                                                 pan_outcome=(smallpan.astype(imgtype) * mask_blurred_pan_chan + bigpan.astype(imgtype) *( 1-mask_blurred_pan_chan) ).astype(imgtype)
+                                                keep_outside_nodata(pan_outcome, bigpan)
 
                                                 with rasterio.open(cloudmask_path) as cloudmask:
                                                     taicld=cloudmask.read(1,window=ints_window_TaicldWin)

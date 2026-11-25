@@ -22,6 +22,8 @@ If you use this code, please cite the accompanying paper:
 
 > Hsu, H.-J., Tseng, K.-H., Tsai, F., Liu, C.-L., Lo, C.-C., & Moortgat, J. (2026). A novel approach to automated cloud removal and seamless multisensor satellite image mosaicking. *Applied Computing and Geosciences*, 31, 100387. https://doi.org/10.1016/j.acags.2026.100387
 
+The paper is open access: [PDF](docs/paper/Hsu_et_al_2026_Applied_Computing_and_Geosciences.pdf) (© 2026 The Authors; published by Elsevier under the [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) license).
+
 To cite the software itself, use its Zenodo archive: https://doi.org/10.5281/zenodo.23404699 (all versions; each release also has its own DOI).
 
 ---

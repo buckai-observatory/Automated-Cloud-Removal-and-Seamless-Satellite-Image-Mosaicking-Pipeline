@@ -55,7 +55,7 @@ for f in sorted((REPO / "docs").glob("*.md")):
 for name in PROJECT:
     if (REPO / name).exists():
         PAGES[name] = name
-ASSETS = []                                            # copied into the site as they are
+ASSETS = ["docs/paper"]                                # copied into the site as they are (the open-access paper PDF)
 
 # API reference: one section per module, listing its public functions and
 # classes. quartodoc renders them from the docstrings.

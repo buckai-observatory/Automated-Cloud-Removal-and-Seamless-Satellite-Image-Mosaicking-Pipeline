@@ -173,6 +173,7 @@ def score_candidates(candidate_files, cloud_files, candidate_folder, cloud_folde
 
                         tw6mMask=land_sea_mask.read(1,window=ints_window_tw6m)
 
+                        mosaic_rgb_masked[tw6mMask==0]=0
                         imgRGB[tw6mMask==0]=0
 
 

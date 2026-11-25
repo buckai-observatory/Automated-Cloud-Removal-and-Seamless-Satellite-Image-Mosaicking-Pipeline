@@ -102,6 +102,23 @@ def test_candidate_scores_without_cloud_patches(step4, scene_pool):
     assert score_pool(step4, scene_pool(1, 0)).shape == (1, 0)
 
 
+@pytest.mark.parametrize("sea_value", [0, 80, 254])
+def test_coastal_score_compares_the_same_land_pixels(step4, scene_pool, sea_value):
+    pool = scene_pool(1, 1)
+    land = np.ones((64, 64), np.uint8)
+    land[:, 32:] = 0
+    pool.write_raster(pool.root / "land.tif", land)
+    candidate = pool.mosaic.copy()
+    candidate[:, land == 0] = sea_value
+    pool.write_raster(pool.candidates / pool.candidate_files[0], candidate)
+
+    assert score_pool(step4, pool)[0, 0] == pytest.approx(1)
+
+    # A difference on land still affects ranking after masking the sea.
+    candidate[:, land == 1] = 100
+    pool.write_raster(pool.candidates / pool.candidate_files[0], candidate)
+    assert score_pool(step4, pool)[0, 0] < 1
+
 @pytest.mark.parametrize("missing", [False, True])
 def test_unreadable_candidate_is_rejected_without_losing_other_scores(step4, scene_pool, missing):
     pool = scene_pool(2, 2)

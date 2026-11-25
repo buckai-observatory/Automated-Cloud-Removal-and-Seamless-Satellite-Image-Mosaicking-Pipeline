@@ -1395,7 +1395,11 @@ def main():
     imgtype = image_dtype(trueBits)
     imgBits=(2**trueBits)/(2**8)
 
-    files = listdir(mypath)
+    # Sorted so that the processing order does not depend on the operating
+    # system: os.listdir() is alphabetical on Windows (where the published
+    # results were produced) but arbitrary on Linux and macOS. The scene that
+    # sorts first is the anchor; the others follow by distance from it.
+    files = sorted(listdir(mypath))
     gt_two=[]
     file=[]
     gt_five=[]
@@ -1418,7 +1422,7 @@ def main():
         raise ValueError("Step 2 needs at least two input .img scenes.")
 
     dist=np.squeeze(distance.cdist( coords,[coords[0]] , 'euclidean'))# compute Euclidean distance among 2D data points
-    distIndex=np.argsort(dist) 
+    distIndex=np.argsort(dist, kind='stable')  # equal distances keep name order
     ReadOrder=[file[i] for i in distIndex.tolist()]
     print("File processing order:", ReadOrder)
 

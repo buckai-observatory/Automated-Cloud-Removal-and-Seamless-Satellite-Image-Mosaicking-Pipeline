@@ -44,10 +44,12 @@ AOI = (200000, 2661000, 222000, 2683000)
 # (centre x, centre y, width, height in metres) that imitates the footprint of
 # an orthorectified satellite swath. Neighbouring strips overlap by about 3 km,
 # and their boundaries cross at two points, where each seamline starts and ends.
+# Step 2 starts from the scene whose name sorts first, so the middle strip is
+# a0000001: the mosaic grows from the centre (middle, then east, then west).
 PRIMARY = [
-    ("a0000001", "S2B_51QTG_20231126_0_L2A", (205500, 2672000, 8000, 18000)),
-    ("a0000003", "S2A_51QTG_20231022_0_L2A", (210500, 2672500, 8000, 16000)),
-    ("a0000005", "S2A_51QTG_20230922_0_L2A", (215500, 2671500, 8000, 17000)),
+    ("a0000003", "S2B_51QTG_20231126_0_L2A", (205500, 2672000, 8000, 18000)),   # west
+    ("a0000001", "S2A_51QTG_20231022_0_L2A", (210500, 2672500, 8000, 16000)),   # middle
+    ("a0000005", "S2A_51QTG_20230922_0_L2A", (215500, 2671500, 8000, 17000)),   # east
 ]
 TILT_DEG = 8
 # Mostly clear scenes covering the whole area, used to fill clouds in Step 4.

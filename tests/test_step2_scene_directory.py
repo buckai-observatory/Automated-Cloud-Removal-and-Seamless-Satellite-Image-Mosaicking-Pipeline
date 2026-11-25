@@ -44,7 +44,7 @@ def test_step2_reads_separate_scene_directory(step2, tmp_path, monkeypatch, scen
             "path_method": "a6c_int", "resampleTo": 2, "res": res, "trueBits": 8,
             "imgPath": inputs.name if separate else ".", "kernel": 5, "pan_res": 1,
             "canvas_crs": crs, "canvas_x_max": left + size * res + 200,
-            "canvas_y_min": top - size * res - 120,
+            "canvas_y_min": top - size * res - 120, "startScene": "a0000003",
         }), encoding="utf-8")
         with monkeypatch.context() as mp:
             mp.chdir(work)

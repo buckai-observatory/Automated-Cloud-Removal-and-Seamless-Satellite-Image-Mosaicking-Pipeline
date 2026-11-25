@@ -229,7 +229,10 @@ def write_configs(work):
     canvas = {"canvas_crs": CRS, "canvas_x_max": str(AOI[2]), "canvas_y_min": str(AOI[1])}
     write_json(s2 / "para.txt", {
         "path_method": "a6c", "res": str(XS_RES), "pan_res": str(PAN_RES), "resampleTo": "5",
-        "trueBits": str(TRUE_BITS), "imgPath": str(s2), "kernel": "11", **canvas,
+        "trueBits": str(TRUE_BITS), "imgPath": str(s2), "kernel": "11",
+        # Start from the central scene so the expected fill rate does not
+        # depend on file order.
+        "startScene": "a0000003", **canvas,
     })
     write_json(s3 / "para_pan.txt", {
         "res": str(PAN_RES), "trueBits": str(TRUE_BITS), "StartLetter": "a",

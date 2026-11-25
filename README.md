@@ -156,6 +156,7 @@ step2/
 | `canvas_crs` | CRS of the mosaic canvas (e.g. `EPSG:3826`) |
 | `canvas_x_max` | Eastern bound of the mosaic canvas (map units) |
 | `canvas_y_min` | Southern bound of the mosaic canvas (map units) |
+| `startScene` | Optional. Scene that starts the mosaic, e.g. `a0000003` (with or without `.img`). Default: the first scene in alphabetical order. The other scenes follow by distance from it, ties in alphabetical order. |
 
 The supplied `para.txt` and Sentinel-2 demo deliberately use `a6c` to keep the
 historical arithmetic used for the paper's method. Set `path_method` to

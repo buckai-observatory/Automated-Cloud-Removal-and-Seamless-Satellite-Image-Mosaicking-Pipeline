@@ -18,7 +18,7 @@ import scipy.ndimage
 from rasterio import Affine as A
 import geopandas as gpd
 from os import listdir
-from os.path import isfile, join
+from os.path import isfile, join, splitext
 from operator import itemgetter
 import copy
 from timeit import default_timer as timer
@@ -1367,6 +1367,39 @@ def image_dtype(true_bits):
         if true_bits <= storage_bits:
             return 'uint' + str(storage_bits)
 
+
+def scene_read_order(names, coords, start_scene=None):
+    """Return the order in which Step 2 adds scenes to the mosaic.
+
+    *names* are the scene file names and *coords* their upper-left corners.
+    The first scene is *start_scene* if given, otherwise the first name in
+    alphabetical order. The other scenes follow by increasing distance from
+    the first scene's corner; equal distances keep alphabetical order.
+    """
+    names = list(names)
+    # float32 matches the corner precision the original code used.
+    coords = np.asarray(coords, dtype='float32').reshape(len(names), 2)
+    alpha = sorted(range(len(names)), key=lambda i: names[i])
+    names = [names[i] for i in alpha]
+    coords = coords[alpha]
+    if start_scene:
+        start_scene = str(start_scene)
+        matches = [i for i, n in enumerate(names)
+                   if n == start_scene or splitext(n)[0] == start_scene]
+        if not matches:
+            raise ValueError(
+                f"startScene {start_scene!r} is not one of the input scenes: {names}")
+        start = matches[0]
+    else:
+        start = 0
+    dist = np.atleast_1d(np.squeeze(distance.cdist(coords, [coords[start]], 'euclidean')))
+    order = np.argsort(dist, kind='stable').tolist()
+    # The start scene has distance 0; keep it first even if another scene
+    # shares its corner.
+    order.remove(start)
+    return [names[start]] + [names[i] for i in order]
+
+
 def main():
     """Run this pipeline step using the parameters in the working folder."""
     global canvas_crs, res, union_gt
@@ -1395,7 +1428,9 @@ def main():
     imgtype = image_dtype(trueBits)
     imgBits=(2**trueBits)/(2**8)
 
-    files = listdir(mypath)
+    # Sort the listing: os.listdir order differs between file systems, and
+    # the processing order changes the mosaic.
+    files = sorted(listdir(mypath))
     gt_two=[]
     file=[]
     gt_five=[]
@@ -1406,10 +1441,10 @@ def main():
 
       if isfile(fullpath) and  f.endswith(".img"):
 
-        image=rasterio.open(fullpath)
-        file.append(f)
-        gt_two.append(image.transform[2] )
-        gt_five.append(image.transform[5] )
+        with rasterio.open(fullpath) as image:
+            file.append(f)
+            gt_two.append(image.transform[2] )
+            gt_five.append(image.transform[5] )
 
 
     coords=np.array([[gt_two[i],gt_five[i]] for i in range(len(gt_two))],dtype='float32')    
@@ -1417,9 +1452,7 @@ def main():
     if len(file) < 2:
         raise ValueError("Step 2 needs at least two input .img scenes.")
 
-    dist=np.squeeze(distance.cdist( coords,[coords[0]] , 'euclidean'))# compute Euclidean distance among 2D data points
-    distIndex=np.argsort(dist) 
-    ReadOrder=[file[i] for i in distIndex.tolist()]
+    ReadOrder = scene_read_order(file, coords, datastore.get("startScene"))
     print("File processing order:", ReadOrder)
 
     allWindow=[]
@@ -1704,7 +1737,7 @@ def main():
             kwargs = cloudmask_out.meta.copy()
             kwargs.update(BIGTIFF="IF_SAFER")
 
-            cldList=glob.glob(''.join(str(pathlib.Path().absolute()))+os.sep+CLOUD_MASK_FOLDER+os.sep+'*'+image1_ds[:-4]+'*.tif')        
+            cldList=sorted(glob.glob(''.join(str(pathlib.Path().absolute()))+os.sep+CLOUD_MASK_FOLDER+os.sep+'*'+image1_ds[:-4]+'*.tif'))        
             b1=mask_blend_preprocess_for_order(cldList[0],mask_blurred_4chan,res,union_gt)     
 
             b1d=mask_blend_preprocess_for_order_loop('mosaic_cloudmask.tif',mask_blurred_4chan,res,union_gt,ReadWindow)     
@@ -2009,9 +2042,9 @@ def main():
             mosaic_out.close()
 
 
-            cldList=glob.glob(''.join(str(pathlib.Path().absolute()))+os.sep+CLOUD_MASK_FOLDER+os.sep+'*'+image1_ds[:-4]+'*.tif')        
+            cldList=sorted(glob.glob(''.join(str(pathlib.Path().absolute()))+os.sep+CLOUD_MASK_FOLDER+os.sep+'*'+image1_ds[:-4]+'*.tif'))        
             b1=mask_blend_preprocess_for_order(cldList[0],mask_blurred_4chan,res,union_gt)
-            cldList=glob.glob(''.join(str(pathlib.Path().absolute()))+os.sep+CLOUD_MASK_FOLDER+os.sep+'*'+image2_ds[:-4]+'*.tif')
+            cldList=sorted(glob.glob(''.join(str(pathlib.Path().absolute()))+os.sep+CLOUD_MASK_FOLDER+os.sep+'*'+image2_ds[:-4]+'*.tif'))
             b1d=mask_blend_preprocess_for_order(cldList[0],mask_blurred_4chan,res,union_gt)
 
 

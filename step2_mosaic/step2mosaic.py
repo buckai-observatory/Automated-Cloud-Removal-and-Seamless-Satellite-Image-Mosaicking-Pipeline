@@ -910,7 +910,10 @@ def buildGraph(data_final,data_final2,height,width,path_method,trueID_intersect,
     
     
     # Legacy uint8 costs intentionally wrap; keep the arithmetic unchanged.
-    with np.errstate(over='ignore'):
+    # With a7c the wrapped sum of the two differences can be 0, giving an
+    # infinite weight as before; only that divide-by-zero warning is silenced.
+    divide = 'ignore' if path_method == 'a7c' else np.geterr()['divide']
+    with np.errstate(over='ignore', divide=divide):
         for x in tqdm.tqdm(range(1,width*height+1)):#
     
             conf1=new_d[x-1].tolist()

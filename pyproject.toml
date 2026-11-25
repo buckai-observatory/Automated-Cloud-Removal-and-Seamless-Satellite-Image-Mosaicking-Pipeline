@@ -8,7 +8,14 @@ description = "Automated cloud removal and seamless satellite image mosaicking p
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
-authors = [{name = "Hsiao-Jou Hsu"}]
+authors = [
+    {name = "Hsiao-Jou Hsu"},
+    {name = "Kuo-Hsin Tseng"},
+    {name = "Fuan Tsai"},
+    {name = "Chian-Liang Liu"},
+    {name = "Chi-Chuan Lo"},
+    {name = "Joachim Moortgat"},
+]
 requires-python = ">=3.10"
 dynamic = ["version", "dependencies"]
 

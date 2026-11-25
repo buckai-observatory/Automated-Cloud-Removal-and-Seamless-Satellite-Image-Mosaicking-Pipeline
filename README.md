@@ -187,7 +187,7 @@ If no seamline can be found through valid pixels of an overlap (for example when
 
 Folder: `step3_pan_mosaic/`.
 
-Copy from Step 2: `transform.npy`, `ImgInd.npy`, `allWindow.npy`, `Union_gt.npy`, `ProcessOrder.txt`, and all `*_seamline_polygon.img` files, together with their `.aux.xml` sidecars when present (as in the Sentinel-2 demo). Step 2 does not require `.ige` files. Add `raw_pan/` and an empty `new_pan/`.
+Copy from Step 2: `transform.npy`, `ImgInd.npy`, `allWindow.npy`, `Union_gt.npy`, `ProcessOrder.txt`, and all `*_seamline_polygon.img` files. Copy `*_seamline_polygon.img.aux.xml` sidecars too if Step 2 wrote any; they are optional and usually absent, so skip them if your shell reports no matches. Step 2 does not require `.ige` files. Add `raw_pan/` and an empty `new_pan/`.
 
 Configure `para_pan.txt` (`res`, `trueBits`, `StartLetter`, `upscale_factor`, `canvas_crs`, `canvas_x_max`, `canvas_y_min`) and run `run.bat`. Output: `mosaic_pan.tif`.
 

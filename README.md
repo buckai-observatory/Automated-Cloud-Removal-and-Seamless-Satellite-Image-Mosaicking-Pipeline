@@ -18,6 +18,7 @@ Documentation website, with every step's README and an API reference generated f
 
 - **In your browser, nothing to install:** [CloudPeel](https://buckai-observatory.org/Automated-Cloud-Removal-and-Seamless-Satellite-Image-Mosaicking-Pipeline/cloudpeel/) shows mosaics made with this pipeline before and after cloud filling; change the cloud tolerance and SSIM threshold and see the result change.
 - **In Colab, nothing to install:** the [walkthrough notebook](notebooks/sentinel2_walkthrough.ipynb) runs Steps 2–4 on free Sentinel-2 imagery with figures after each step; [open it in Colab](https://colab.research.google.com/github/buckai-observatory/Automated-Cloud-Removal-and-Seamless-Satellite-Image-Mosaicking-Pipeline/blob/main/notebooks/sentinel2_walkthrough.ipynb) and choose *Runtime → Run all* (about 5 minutes).
+- **Your own area:** the [Columbus notebook](notebooks/your_own_area_columbus.ipynb) uses [geoai-datacubes](https://github.com/buckai-observatory/geoai-datacubes) to choose a 20 km area (here Columbus, Ohio) and a season, measure the cloud cover of every Sentinel-2 acquisition inside the area, pick partly cloudy scenes and clear candidates, and run Steps 2–4 on them; [open it in Colab](https://colab.research.google.com/github/buckai-observatory/Automated-Cloud-Removal-and-Seamless-Satellite-Image-Mosaicking-Pipeline/blob/main/notebooks/your_own_area_columbus.ipynb).
 - **On your computer:** after [installation](#installation), `python examples/sentinel2_demo/run_demo.py --workdir demo_output` runs Steps 2–4 on free Sentinel-2 imagery (see [Try it: Sentinel-2 demo](#try-it-sentinel-2-demo)).
 
 If you use this code, please cite the accompanying paper:
@@ -316,7 +317,7 @@ step4_cloud_removal/   cloud-filling script, para_cld.txt template
 docs/                  troubleshooting notes
 tests/                 unit tests (pytest)
 examples/              Sentinel-2 demo of Steps 2-4; CloudPeel web explorer
-notebooks/             walkthrough notebook of Steps 2-4 (runs in Colab)
+notebooks/             walkthrough of Steps 2-4, and the same for your own area (both run in Colab)
 paper.md               JOSS paper source
 ```
 

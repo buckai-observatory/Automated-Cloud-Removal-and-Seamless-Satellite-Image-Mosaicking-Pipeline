@@ -62,7 +62,7 @@ jobs:
         run: pixi run --locked demo
 
   notebook:
-    name: notebook (macOS Apple silicon)
+    name: notebooks (macOS Apple silicon)
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
@@ -74,13 +74,14 @@ jobs:
           environments: notebook
           locked: true
           cache: true
-      - name: Run the walkthrough notebook
+      - name: Run the walkthrough and Columbus notebooks
         run: |
           # The notebook's "python3" kernel must be the environment's own (JUPYTER_PATH, see pyproject.toml).
           pixi run --locked -e notebook python -c "from jupyter_client.kernelspec import KernelSpecManager as K; d = K().get_kernel_spec('python3').resource_dir; print(d); assert '.pixi' in d"
           pixi run --locked -e notebook jupyter nbconvert --to notebook --execute --output executed.ipynb --ExecutePreprocessor.timeout=1800 notebooks/sentinel2_walkthrough.ipynb
+          pixi run --locked -e notebook jupyter nbconvert --to notebook --execute --output executed_columbus.ipynb --ExecutePreprocessor.timeout=1800 notebooks/your_own_area_columbus.ipynb
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: executed-notebook-macos
-          path: notebooks/executed.ipynb
+          path: notebooks/executed*.ipynb

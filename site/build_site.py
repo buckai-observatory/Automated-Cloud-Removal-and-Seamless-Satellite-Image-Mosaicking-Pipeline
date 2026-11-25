@@ -58,7 +58,8 @@ for name in PROJECT:
     if (REPO / name).exists():
         PAGES[name] = name
 ASSETS = ["docs/paper"]                                # copied into the site as they are (the open-access paper PDF)
-NOTEBOOK_NAMES = {"sentinel2_walkthrough": "Walkthrough notebook"}   # navbar names; default: file stem
+NOTEBOOK_NAMES = {"sentinel2_walkthrough": "Walkthrough notebook",
+                  "your_own_area_columbus": "Your own area (Columbus, Ohio)"}   # navbar names; default: file stem
 
 
 def notebooks() -> dict:

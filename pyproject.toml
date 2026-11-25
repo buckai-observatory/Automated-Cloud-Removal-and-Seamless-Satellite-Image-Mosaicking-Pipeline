@@ -97,8 +97,16 @@ pytest = "*"
 [tool.pixi.feature.notebook.dependencies]
 jupyterlab = ">=4"
 ipykernel = "*"
+ipywidgets = "*"
 pandas = "*"
 nbconvert = "*"
+pystac-client = "*"
+pyproj = "*"
+
+# notebooks/your_own_area_columbus.ipynb finds and downloads scenes with
+# geoai-datacubes (https://github.com/buckai-observatory/geoai-datacubes).
+[tool.pixi.feature.notebook.pypi-dependencies]
+geoai-datacubes = ">=1.1"
 
 # Jupyter looks for kernels in the user's own folder (e.g. ~/Library/Jupyter
 # on macOS) before the environment's. A "python3" kernel there, left by

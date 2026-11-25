@@ -1,6 +1,7 @@
 name: walkthrough-notebook
 
-# Runs notebooks/sentinel2_walkthrough.ipynb from top to bottom on public
+# Runs notebooks/sentinel2_walkthrough.ipynb and your_own_area_columbus.ipynb
+# from top to bottom on public
 # Sentinel-2 data. The install steps repeat the notebook's Colab set-up cell
 # on a fresh Ubuntu runner with Colab's Python version, starting from a newer
 # OpenCV as Colab ships one. Needs internet access to Earth Search, so it runs
@@ -30,16 +31,19 @@ jobs:
         run: |
           sudo apt-get -qq update && sudo apt-get -qq install -y gdal-bin
           pip uninstall -y -q opencv-python opencv-python-headless opencv-contrib-python
-          pip install -q -r requirements.txt
+          pip install -q -r requirements.txt geoai-datacubes
           python -c "import cv2; assert cv2.__version__.startswith('4.10'), cv2.__version__; print('OpenCV', cv2.__version__)"
       - name: Install Jupyter and pandas
         run: pip install -q nbconvert ipykernel pandas
-      - name: Run the notebook
+      - name: Run the walkthrough notebook
         working-directory: notebooks
         run: jupyter nbconvert --to notebook --execute --output executed.ipynb --ExecutePreprocessor.timeout=1800 sentinel2_walkthrough.ipynb
+      - name: Run the Columbus notebook
+        working-directory: notebooks
+        run: jupyter nbconvert --to notebook --execute --output executed_columbus.ipynb --ExecutePreprocessor.timeout=1800 your_own_area_columbus.ipynb
       - name: Upload the executed notebook
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: executed-notebook
-          path: notebooks/executed.ipynb
+          path: notebooks/executed*.ipynb

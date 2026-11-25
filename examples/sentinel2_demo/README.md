@@ -6,6 +6,12 @@ University, for access). This demo runs the same pipeline on free Sentinel-2
 imagery, so that anyone can check that it works.
 
 ```bash
+pixi run --locked demo            # from the repository root, with pixi (see the main README)
+```
+
+or, in an environment set up with pip or conda:
+
+```bash
 pip install -r requirements.txt   # from the repository root
 python examples/sentinel2_demo/run_demo.py --workdir demo_output
 ```

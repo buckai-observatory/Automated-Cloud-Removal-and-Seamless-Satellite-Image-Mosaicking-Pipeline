@@ -1,0 +1,71 @@
+name: pixi-locked
+
+# Installs the locked pixi environment exactly as the README tells users to
+# (pixi install --locked) on clean macOS (Apple silicon and Intel), Windows
+# and Linux machines, then runs the test suite and the Sentinel-2 demo with
+# --check. On Apple silicon it also runs the walkthrough notebook in the
+# locked notebook environment. --locked fails if pyproject.toml and
+# pixi.lock disagree.
+on:
+  push:
+    branches: [main]
+    paths: ['pyproject.toml', 'pixi.lock', 'requirements.txt', '.github/workflows/pixi.yml']
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 8 1 * *"
+
+jobs:
+  locked:
+    name: ${{ matrix.label }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {os: macos-latest, label: "macOS Apple silicon"}
+          - {os: macos-15-intel, label: "macOS Intel"}
+          - {os: windows-latest, label: "Windows"}
+          - {os: ubuntu-latest, label: "Linux"}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0          # setuptools_scm needs the tags for the version
+      - uses: prefix-dev/setup-pixi@v0.8.1
+        with:
+          pixi-version: v0.77.1
+          environments: default test
+          locked: true
+          cache: true
+      - name: Environment
+        run: |
+          pixi run --locked python -c "import sys, cv2, rasterio, numpy; print(sys.executable); print('Python', sys.version.split()[0], '| OpenCV', cv2.__version__, '| rasterio', rasterio.__version__, '| numpy', numpy.__version__)"
+          pixi run --locked gdalinfo --version
+      - name: Tests
+        run: pixi run --locked -e test test
+      - name: Sentinel-2 demo
+        run: pixi run --locked demo
+
+  notebook:
+    name: notebook (macOS Apple silicon)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: prefix-dev/setup-pixi@v0.8.1
+        with:
+          pixi-version: v0.77.1
+          environments: notebook
+          locked: true
+          cache: true
+      - name: Run the walkthrough notebook
+        run: |
+          # The notebook's "python3" kernel must be the environment's own (JUPYTER_PATH, see pyproject.toml).
+          pixi run --locked -e notebook python -c "from jupyter_client.kernelspec import KernelSpecManager as K; d = K().get_kernel_spec('python3').resource_dir; print(d); assert '.pixi' in d"
+          pixi run --locked -e notebook jupyter nbconvert --to notebook --execute --output executed.ipynb --ExecutePreprocessor.timeout=1800 notebooks/sentinel2_walkthrough.ipynb
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: executed-notebook-macos
+          path: notebooks/executed.ipynb

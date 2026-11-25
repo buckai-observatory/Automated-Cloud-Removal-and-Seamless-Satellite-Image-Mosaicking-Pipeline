@@ -19,8 +19,11 @@ Please check [`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md) first.
 
 1. Fork the repository and create a feature branch.
 2. Make your changes; keep commits focused and descriptive.
-3. Run the unit tests (`pip install -r requirements-dev.txt && pytest`) and,
+3. Run the unit tests (`pixi run --locked -e test test`, or
+   `pip install -r requirements-dev.txt && pytest`) and,
    if possible, test your changes with your own imagery.
+   If you change dependencies, update `requirements.txt` and the pixi tables in
+   `pyproject.toml` together, then run `pixi lock` and commit `pixi.lock`.
 4. Open a pull request with a clear description of what you changed and why.
 
 ## Code style

@@ -189,6 +189,7 @@ def test_steps_2_to_4_end_to_end(demo, step2, step3, step4, tmp_path, monkeypatc
             assert src.nodata == nodata, name
     result = demo.check_results(s4)
     assert result["zero_pixels"] == 0
+    assert result["outside_pixels"] == 0
     assert result["fill_fraction"] > 0.9
     with rasterio.open(s4 / "mosaic_xs.tif") as src:
         filled = src.read()

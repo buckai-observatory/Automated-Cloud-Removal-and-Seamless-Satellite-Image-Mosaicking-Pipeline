@@ -269,7 +269,10 @@ def check_results(s4):
           ``mosaic_cloudmask.tif``;
       ``zero_pixels``: pixels inside the mosaic footprint (every band non-zero
           before Step 4) and inside the land/sea mask where ``mosaic_xs.tif``
-          has a 0 (no data) in some band after Step 4.
+          has a 0 (no data) in some band after Step 4;
+      ``outside_pixels``: pixels outside every scene (0 in every band before
+          Step 4) that have data in ``mosaic_xs.tif`` or ``mosaic_pan.tif``
+          after Step 4 (Pan pixels counted on the Pan grid).
     """
     with rasterio.open(s4 / "mosaic_cloudmask_raw.tif") as src:
         cloud_before = src.read(1) == 1
@@ -278,8 +281,14 @@ def check_results(s4):
     with rasterio.open(s4 / "mosaic_xs_raw.tif") as src:
         footprint = np.all(src.read() > 0, axis=0)
     with rasterio.open(s4 / "mosaic_xs.tif") as src:
-        holes = np.any(src.read() == 0, axis=0)
+        after = src.read()
+        holes = np.any(after == 0, axis=0)
         bounds, shape = src.bounds, src.shape
+    with rasterio.open(s4 / "mosaic_xs_raw.tif") as src:
+        outside = np.all(src.read() == 0, axis=0)
+    outside_pixels = int((outside & np.any(after > 0, axis=0)).sum())
+    with rasterio.open(s4 / "mosaic_pan_raw.tif") as raw, rasterio.open(s4 / "mosaic_pan.tif") as src:
+        outside_pixels += int(((raw.read(1) == 0) & (src.read(1) > 0)).sum())
     # The land/sea mask may cover a larger area than the mosaic: read it on the
     # mosaic's grid (outside the mask counts as sea).
     with rasterio.open(s4 / "land_sea_mask.tif") as src:
@@ -289,6 +298,7 @@ def check_results(s4):
     return {
         "fill_fraction": 1 - float(cloud_after.sum()) / clouds if clouds else 1.0,
         "zero_pixels": int((holes & footprint & land).sum()),
+        "outside_pixels": outside_pixels,
     }
 
 
@@ -302,7 +312,8 @@ def main():
     parser.add_argument("--skip-download", action="store_true")
     parser.add_argument("--check", action="store_true",
                         help=f"exit with an error if less than {MIN_FILL_FRACTION:.0%}% of the cloudy area "
-                             "is filled or the final XS mosaic has no-data pixels inside the scenes on land")
+                             "is filled, the final XS mosaic has no-data pixels inside the scenes on land, "
+                             "or Step 4 wrote pixels outside the scenes")
     args = parser.parse_args()
     work = args.workdir.resolve()
     s2, s3, s4 = work / "step2", work / "step3", work / "step4"
@@ -335,7 +346,8 @@ def main():
 
     result = check_results(s4)
     print(f"\nCloudy area filled: {result['fill_fraction']:.0%}; "
-          f"no-data pixels inside the scenes on land: {result['zero_pixels']}")
+          f"no-data pixels inside the scenes on land: {result['zero_pixels']}; "
+          f"pixels written outside the scenes: {result['outside_pixels']}")
     if args.check:
         problems = []
         if result["fill_fraction"] < MIN_FILL_FRACTION:
@@ -343,6 +355,8 @@ def main():
                             f"expected at least {MIN_FILL_FRACTION:.0%}")
         if result["zero_pixels"]:
             problems.append(f"{result['zero_pixels']} no-data (0) pixels inside the scenes on land")
+        if result["outside_pixels"]:
+            problems.append(f"{result['outside_pixels']} pixels written outside the scenes")
         if problems:
             sys.exit("Demo check failed: " + "; ".join(problems))
         print("Demo check passed.")

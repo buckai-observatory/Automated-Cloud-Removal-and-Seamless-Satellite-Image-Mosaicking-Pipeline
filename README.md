@@ -162,6 +162,8 @@ historical arithmetic used for the paper's method. Set `path_method` to
 `a6c_int` explicitly for new runs that should avoid uint8 wraparound; this can
 change the selected seamline.
 
+Processing order: Step 2 starts from the scene whose file name sorts first (alphabetically) and adds the others in order of distance from it. Name the scenes so that the one you want to start from, usually a central scene, sorts first. The order is written to `ProcessOrder.txt` and is the same on every operating system.
+
 Outputs: `mosaic_xs.tif` (XS mosaic), `mosaic_cloudmask.tif` (cloud mask mosaic), `ProcessOrder.txt`, `transform.npy`, `allWindow.npy`, `ImgInd.npy`, `Union_gt.npy`, and two rasters per seamline:
 
 - `<scene1><scene2>_seamline.img` for the first pair and `<scene>_seamline.img` for each later scene: the raw seamline path (uint8, `1` on the seamline, `0` elsewhere) on the Step 2 grid. For inspection only; later steps do not read it.

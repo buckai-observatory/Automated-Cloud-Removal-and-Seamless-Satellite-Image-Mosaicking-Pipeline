@@ -20,7 +20,9 @@ on a laptop (Windows, macOS or Linux) and about 350 MB of disk space.
    [Earth Search](https://earth-search.aws.element84.com/v1) catalogue and
    reprojects them to TWD97 (`EPSG:3826`), the pipeline's default grid:
    - three partly cloudy scenes (2023-09-22, 2023-10-22, 2023-11-26), each cut
-     to a tilted north–south strip that imitates a separate satellite swath;
+     to a tilted north–south strip that imitates a separate satellite swath.
+     The middle strip is named `a0000001` because Step 2 starts from the
+     scene whose name sorts first;
    - three mostly clear scenes (2023-10-12, 2023-11-01, 2023-11-21) used as
      cloud-filling candidates.
 2. **Converts** them to the pipeline's inputs:

@@ -73,7 +73,7 @@ def readable_candidates(folder):
     with every cloud patch unfilled.
     """
     names, unreadable = [], []
-    for f in listdir(folder):
+    for f in sorted(listdir(folder)):
         path = join(folder, f)
         if f.startswith('.') or not f.endswith('.img') or not isfile(path):
             continue
@@ -372,7 +372,7 @@ def main():
             file = readable_candidates(candidate_img_path)
 
 
-        files = listdir(cloud_work_path)
+        files = sorted(listdir(cloud_work_path))
         cldfile=[]
         for f in files:
           fullpath = join(cloud_work_path, f)

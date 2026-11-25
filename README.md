@@ -158,13 +158,14 @@ step2/
 | `canvas_crs` | CRS of the mosaic canvas (e.g. `EPSG:3826`) |
 | `canvas_x_max` | Eastern bound of the mosaic canvas (map units) |
 | `canvas_y_min` | Southern bound of the mosaic canvas (map units) |
+| `startScene` | Optional. Scene to start the mosaic from, e.g. `a0000003` (with or without `.img`). Default: the scene whose name sorts first. |
 
 The supplied `para.txt` and Sentinel-2 demo deliberately use `a6c` to keep the
 historical arithmetic used for the paper's method. Set `path_method` to
 `a6c_int` explicitly for new runs that should avoid uint8 wraparound; this can
 change the selected seamline.
 
-Processing order: Step 2 starts from the scene whose file name sorts first (alphabetically) and adds the others in order of distance from it. Name the scenes so that the one you want to start from, usually a central scene, sorts first. The order is written to `ProcessOrder.txt` and is the same on every operating system.
+Processing order: Step 2 starts from the scene whose file name sorts first (alphabetically) and adds the others in order of distance from it. Name the scenes so that the one you want to start from, usually a central scene, sorts first, or set `startScene` in `para.txt`. The order is written to `ProcessOrder.txt` and is the same on every operating system.
 
 Outputs: `mosaic_xs.tif` (XS mosaic), `mosaic_cloudmask.tif` (cloud mask mosaic), `ProcessOrder.txt`, `transform.npy`, `allWindow.npy`, `ImgInd.npy`, `Union_gt.npy`, and two rasters per seamline:
 

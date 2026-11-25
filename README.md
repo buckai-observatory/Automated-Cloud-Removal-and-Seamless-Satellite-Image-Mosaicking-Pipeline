@@ -167,6 +167,15 @@ change the selected seamline.
 
 Processing order: Step 2 starts from the scene whose file name sorts first (alphabetically) and adds the others in order of distance from it. Name the scenes so that the one you want to start from, usually a central scene, sorts first, or set `startScene` in `para.txt`. The order is written to `ProcessOrder.txt` and is the same on every operating system.
 
+> **Changed after v1.1.0:** up to v1.1.0, Step 2 started from whichever scene the
+> operating system listed first, and Step 4 read its candidates and cloud
+> patches in that order too (fixed in #97). Windows lists files by name, so
+> results there do not change for typical scene names such as `a0000001.img`.
+> On macOS and Linux, Step 2 can now start from a different scene than v1.1.0
+> did, which changes the seamlines and the mosaic, and Step 4 can fill some
+> pixels differently. To keep a v1.1.0 run's starting scene, set `startScene`
+> to the first scene in its `ProcessOrder.txt`.
+
 Outputs: `mosaic_xs.tif` (XS mosaic), `mosaic_cloudmask.tif` (cloud mask mosaic), `ProcessOrder.txt`, `transform.npy`, `allWindow.npy`, `ImgInd.npy`, `Union_gt.npy`, and two rasters per seamline:
 
 - `<scene1><scene2>_seamline.img` for the first pair and `<scene>_seamline.img` for each later scene: the raw seamline path (uint8, `1` on the seamline, `0` elsewhere) on the Step 2 grid. For inspection only; later steps do not read it.

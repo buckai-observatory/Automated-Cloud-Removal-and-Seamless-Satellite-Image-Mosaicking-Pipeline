@@ -18,6 +18,7 @@ from rasterio.windows import Window
 import pathlib
 import os
 import subprocess
+import sys
 import gc
 import json
 from rasterio.enums import Resampling
@@ -57,9 +58,19 @@ def image_dtype(true_bits):
         if true_bits <= storage_bits:
             return 'uint' + str(storage_bits)
 
+STEP2_FILES = ('ProcessOrder.txt', 'transform.npy', 'allWindow.npy', 'ImgInd.npy', 'Union_gt.npy')
+
+def check_step2_files(folder='.'):
+    """Exit with one line naming any Step 2 output missing from *folder*."""
+    missing = [f for f in STEP2_FILES if not os.path.isfile(os.path.join(folder, f))]
+    if missing:
+        sys.exit('Step 3: missing ' + ', '.join(missing) + ' in ' + os.path.abspath(folder)
+                 + '; these come from the Step 2 working folder (see README, Step 3).')
+
 def main():
     """Run this pipeline step using the parameters in the working folder."""
     start = timer()
+    check_step2_files()
     with open('para_pan.txt', 'r') as f:
         datastore = json.load(f)
 

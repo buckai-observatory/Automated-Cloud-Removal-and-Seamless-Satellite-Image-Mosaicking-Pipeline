@@ -13,6 +13,10 @@ python examples/sentinel2_demo/run_demo.py --workdir demo_output
 The script needs an internet connection but no account. It takes a few minutes
 on a laptop (Windows, macOS or Linux) and about 350 MB of disk space.
 
+The same workflow, with figures after each step, is in the notebook
+[`notebooks/sentinel2_walkthrough.ipynb`](../../notebooks/sentinel2_walkthrough.ipynb),
+which also runs in Google Colab without installing anything.
+
 ## What it does
 
 1. **Downloads** small subsets of six Sentinel-2 L2A acquisitions over

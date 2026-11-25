@@ -5,6 +5,8 @@ This script copies them into site/_build/, with
   * README.md as the home page, the README of each pipeline step and of the
     Sentinel-2 demo as one page each, every docs/*.md as one page, and
     CONTRIBUTING.md under "Project";
+  * each notebooks/*.ipynb as one page, rendered from its saved outputs
+    (Quarto does not execute it);
   * links rewritten: links between site pages point to the site, and links to
     any other file of the repository point to that file on GitHub;
   * a navbar link to the CloudPeel explorer, which the workflow copies into
@@ -56,6 +58,14 @@ for name in PROJECT:
     if (REPO / name).exists():
         PAGES[name] = name
 ASSETS = []                                            # copied into the site as they are
+NOTEBOOK_NAMES = {"sentinel2_walkthrough": "Walkthrough notebook"}   # navbar names; default: file stem
+
+
+def notebooks() -> dict:
+    """notebooks/*.ipynb of the repository -> navbar names. Each is rendered from
+    its saved outputs (Quarto does not execute it) as one page."""
+    return {f"notebooks/{f.name}": NOTEBOOK_NAMES.get(f.stem, f.stem)
+            for f in sorted((REPO / "notebooks").glob("*.ipynb"))}
 
 # API reference: one section per module, listing its public functions and
 # classes. quartodoc renders them from the docstrings.
@@ -91,6 +101,8 @@ def resolve(target: str, source: str) -> str:
     here = Path(PAGES[source]).parent
     if repo_path in PAGES:
         url = os.path.relpath(site_name(PAGES[repo_path]), here)
+    elif repo_path in notebooks():
+        url = os.path.relpath(repo_path[:-len(".ipynb")] + ".html", here)
     elif any(repo_path == a or repo_path.startswith(a + "/") for a in ASSETS):
         url = os.path.relpath(repo_path, here)
     elif (REPO / repo_path).is_dir():
@@ -167,6 +179,10 @@ def main():
             steps.append((target, {**STEPS, **DEMO}[source][1]))
         else:
             docs.append((target, "Home" if target == "index.md" else title))
+    for nb, name in notebooks().items():
+        (OUT / nb).parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy(REPO / nb, OUT / nb)
+        docs.append((nb, name))
     for a in ASSETS:
         if (REPO / a).exists():
             shutil.copytree(REPO / a, OUT / a)

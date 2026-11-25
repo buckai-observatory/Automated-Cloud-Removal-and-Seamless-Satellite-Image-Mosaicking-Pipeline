@@ -22,19 +22,34 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {os: macos-latest, label: "macOS Apple silicon"}
-          - {os: macos-15-intel, label: "macOS Intel"}
-          - {os: windows-latest, label: "Windows"}
-          - {os: ubuntu-latest, label: "Linux"}
+          - {os: macos-latest, label: "macOS Apple silicon", dir: ".", envs: "default test"}
+          - {os: macos-15-intel, label: "macOS Intel", dir: ".", envs: "default test"}
+          # As the README tells Windows users: a clone in a short folder
+          # (cloud-mosaic) in a typical place, because of the 260-character
+          # path limit. The notebook environment (JupyterLab) has the
+          # longest paths, so it is installed here too.
+          - {os: windows-latest, label: "Windows", dir: 'C:\Users\runneradmin\Documents\GitHub\cloud-mosaic', envs: "default test notebook"}
+          - {os: ubuntu-latest, label: "Linux", dir: ".", envs: "default test"}
     runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: ${{ matrix.dir }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0          # setuptools_scm needs the tags for the version
+      - name: Copy the clone to a short folder (Windows)
+        if: runner.os == 'Windows'
+        working-directory: .
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path (Split-Path "${{ matrix.dir }}") | Out-Null
+          Copy-Item -Recurse -Force "$env:GITHUB_WORKSPACE" "${{ matrix.dir }}"
       - uses: prefix-dev/setup-pixi@v0.8.1
         with:
           pixi-version: v0.77.1
-          environments: default test
+          manifest-path: ${{ matrix.dir }}/pyproject.toml
+          environments: ${{ matrix.envs }}
           locked: true
           cache: true
       - name: Environment

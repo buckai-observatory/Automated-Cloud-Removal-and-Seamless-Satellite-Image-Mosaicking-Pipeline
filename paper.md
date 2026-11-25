@@ -21,13 +21,14 @@ authors:
   - name: Chi-Chuan Lo
     affiliation: 2
   - name: Joachim Moortgat
+    orcid: 0000-0002-0259-3597
     affiliation: 1
 affiliations:
   - name: School of Earth Sciences, The Ohio State University, Columbus, OH, USA
     index: 1
   - name: Center for Space and Remote Sensing Research, National Central University, Taoyuan, Taiwan
     index: 2
-date: 15 October 2026
+date: 25 November 2026
 bibliography: paper.bib
 ---
 
@@ -169,18 +170,23 @@ overlapping regions stayed below 11.7% of the 12-bit dynamic range. The same
 code also mosaicked Pléiades scenes without modification beyond parameters.
 The original imagery cannot be redistributed, so the repository includes a
 demonstration that downloads free Sentinel-2 imagery of the same region and
-runs Steps 2–4 end to end in a few minutes; on it, Step 4 fills roughly three
-quarters of the cloud-covered area. The repository also includes the full
-four-step workflow, parameter templates, step-by-step documentation, a
-troubleshooting guide and a unit-test suite run in continuous integration on
-Linux and Windows.
+runs Steps 2–4 end to end in a few minutes. On these data, Step 4 fills about
+three quarters of the cloud-covered area. Two Jupyter notebooks explain each
+step with figures and open in Google Colab without a local installation. The
+first runs the demonstration. The second uses geoai-datacubes
+[@moortgat2026geoai] to select an area and Sentinel-2 acquisitions over
+Columbus, Ohio, and runs Steps 2–4 on them. A lock file for the pixi package
+manager fixes the versions of all dependencies. Continuous integration installs
+from this lock file and runs the unit tests and the demonstration on Linux,
+Windows and macOS (Intel and Apple silicon). The repository also includes
+parameter templates, step-by-step documentation and a troubleshooting guide.
 
 # AI usage disclosure
 
 Generative AI (Anthropic's Claude) was used to help reorganize the repository,
 rename variables and files, write documentation, write the unit tests and
-continuous-integration configuration, write the Sentinel-2 demonstration,
-make Steps 2–4 portable across operating systems, and draft and edit this
+continuous-integration configuration, write the Sentinel-2 demonstration and
+the notebooks, set up the locked environment, make Steps 2–4 portable across operating systems, and draft and edit this
 paper. The seamline, normalization and cloud-filling algorithms and their
 implementation were developed by H.-J. Hsu. All AI-assisted changes were
 reviewed by the authors, checked against the original code and the published

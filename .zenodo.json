@@ -8,7 +8,7 @@
     {"name": "Tsai, Fuan", "affiliation": "Center for Space and Remote Sensing Research, National Central University"},
     {"name": "Liu, Chian-Liang", "affiliation": "Center for Space and Remote Sensing Research, National Central University"},
     {"name": "Lo, Chi-Chuan", "affiliation": "Center for Space and Remote Sensing Research, National Central University"},
-    {"name": "Moortgat, Joachim", "affiliation": "School of Earth Sciences, The Ohio State University"}
+    {"name": "Moortgat, Joachim", "orcid": "0000-0002-0259-3597", "affiliation": "School of Earth Sciences, The Ohio State University"}
   ],
   "license": "MIT",
   "keywords": ["remote sensing", "satellite imagery", "cloud removal", "image mosaicking", "seamline optimization", "Python"],

@@ -39,9 +39,13 @@ REPO = pathlib.Path(__file__).resolve().parents[2]  # the pipeline repository
 
 SEARCH = "https://earth-search.aws.element84.com/v1/search"
 SIZE = 22000  # metres, as in the demo
-# Strip layout relative to the area's south-west corner, as in the demo:
-# (centre x offset, centre y offset, width, height)
+# Strip layout relative to the area's south-west corner, as in the demo, from
+# west to east: (centre x offset, centre y offset, width, height)
 STRIPS = [(5500, 11000, 8000, 18000), (10500, 11500, 8000, 16000), (15500, 10500, 8000, 17000)]
+# Scene names of the strips, as in the demo. Step 2 starts from the scene whose
+# name sorts first, so the middle strip is a0000001 and the mosaic grows from
+# the centre.
+STRIP_NAMES = ["a0000003", "a0000001", "a0000005"]
 
 
 def search(aoi_ll, start, end):
@@ -129,10 +133,7 @@ def main():
 
     data = args.workdir / "data"
     if args.reuse:
-        saved = json.loads((args.workdir / "region.json").read_text())
-        demo.PRIMARY = [(n, i, tuple(r)) for n, i, r in saved["primary"]]
-        demo.CANDIDATES = [(n, i, aoi) for n, i, _ in saved["candidates"]]
-        print("Reusing", [p[1] for p in demo.PRIMARY], "and", len(demo.CANDIDATES), "candidates")
+        load_region(args.workdir / "region.json", demo, aoi)
     else:
         select_and_download(demo, args, aoi, aoi_ll, x0, y0, data)
 
@@ -144,6 +145,22 @@ def main():
                 2 ** demo.TRUE_BITS - 1, demo.pan_name)
     sys.argv = ["run_demo.py", "--workdir", str(args.workdir), "--skip-download"]
     demo.main()
+
+
+def load_region(path, demo, aoi):
+    """Give the demo the dates recorded in a region.json (for --reuse)."""
+    saved = json.loads(path.read_text())
+    demo.PRIMARY = [(n, i, tuple(r)) for n, i, r in saved["primary"]]
+    demo.CANDIDATES = [(n, i, aoi) for n, i, _ in saved["candidates"]]
+    print("Reusing", [p[1] for p in demo.PRIMARY], "and", len(demo.CANDIDATES), "candidates")
+    names = [p[0] for p in demo.PRIMARY]  # west to east
+    if len(names) == len(STRIP_NAMES) and min(names) != names[1]:
+        side = "west" if min(names) == names[0] else "east"
+        print(f"Warning: {path} names the {side} strip {min(names)}. Step 2 starts from the "
+              "scene whose name sorts first, so this run grows the mosaic from that strip, "
+              "not from the middle one. Older versions of make_region.py named the west strip "
+              "a0000001. To start from the middle strip, run without --reuse, which chooses "
+              "and downloads the dates again.", file=sys.stderr)
 
 
 def select_and_download(demo, args, aoi, aoi_ll, x0, y0, data):
@@ -186,8 +203,8 @@ def select_and_download(demo, args, aoi, aoi_ll, x0, y0, data):
     extra = sorted((s for s in scored if 0.03 <= s[1] <= 0.8 and s[0]["id"] not in used),
                    key=near)[:args.extra_cloudy]
 
-    demo.PRIMARY = [(f"a{2 * i + 1:07d}", s[0]["id"], (x0 + dx, y0 + dy, w, h))
-                    for i, (s, (dx, dy, w, h)) in enumerate(zip(primary, STRIPS))]
+    demo.PRIMARY = [(name, s[0]["id"], (x0 + dx, y0 + dy, w, h))
+                    for name, s, (dx, dy, w, h) in zip(STRIP_NAMES, primary, STRIPS)]
     demo.CANDIDATES = [(f"a{101 + 2 * i:07d}", s[0]["id"], aoi) for i, s in enumerate(clear + extra)]
     print("Mosaic (cloud inside each strip):", [(p[1], f"{c:.0%}") for p, (_, c) in zip(demo.PRIMARY, primary)])
     print("Candidates:", [(c[1], f"{s[1]:.0%}") for c, s in zip(demo.CANDIDATES, clear + extra)])

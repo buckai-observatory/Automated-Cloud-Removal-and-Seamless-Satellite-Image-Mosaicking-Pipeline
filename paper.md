@@ -185,8 +185,8 @@ parameter templates, step-by-step documentation and a troubleshooting guide.
 
 Generative AI (Anthropic's Claude) was used to help reorganize the repository,
 rename variables and files, write documentation, write the unit tests and
-continuous-integration configuration, write the Sentinel-2 demonstration and
-the notebooks, set up the locked environment, make Steps 2–4 portable across operating systems, and draft and edit this
+continuous-integration configuration, write the Sentinel-2 demonstration,
+make Steps 2–4 portable across operating systems, and draft and edit this
 paper. The seamline, normalization and cloud-filling algorithms and their
 implementation were developed by H.-J. Hsu. All AI-assisted changes were
 reviewed by the authors, checked against the original code and the published

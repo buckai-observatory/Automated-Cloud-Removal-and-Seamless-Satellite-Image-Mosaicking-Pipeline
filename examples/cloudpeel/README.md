@@ -145,6 +145,12 @@ Use a metric CRS for the area, such as its UTM zone. One region takes about
   poorly.
 - The land/sea mask is all land, so choose inland areas (or supply a real mask).
 
+As in the demo, the middle strip is `a0000001`. Step 2 starts from the scene
+whose name sorts first, so the mosaic grows from the centre. Working folders
+made by older versions of `make_region.py` name the west strip `a0000001`, and
+`--reuse` warns about them. Run such a region again without `--reuse` to start
+from the middle strip.
+
 ### Place suggestions
 
 Visitors can suggest a place with the form on the page. It opens a pre-filled

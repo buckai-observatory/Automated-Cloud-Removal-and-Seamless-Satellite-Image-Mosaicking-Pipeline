@@ -52,17 +52,20 @@ def item_date(item_id):
 
 
 def load_dates(spec, pipeline):
-    """Scene name -> date, from a region.json (and optional added.json) or the demo."""
-    names = {}
+    """Scene name -> date, and the mosaicked strips from west to east.
+
+    Both come from a region.json or the demo. The strips keep the order of its
+    ``primary`` list (the demo's ``PRIMARY``), which runs west to east. Their
+    names do not: the middle strip is ``a0000001`` so that Step 2 starts there.
+    """
     if spec == "demo":
         demo = load_demo(pipeline)
-        entries = [(n, i) for n, i, _ in demo.PRIMARY + demo.CANDIDATES]
+        primary, candidates = demo.PRIMARY, demo.CANDIDATES
     else:
         region = json.loads(pathlib.Path(spec).read_text())
-        entries = [(n, i) for n, i, _ in region["primary"] + region["candidates"]]
-    for n, i in entries:
-        names[n] = item_date(i)
-    return names
+        primary, candidates = region["primary"], region["candidates"]
+    dates = {n: item_date(i) for n, i, _ in list(primary) + list(candidates)}
+    return dates, [n for n, _, _ in primary]
 
 
 def web_grid(path):
@@ -211,10 +214,9 @@ def main():
     k = key(tol, ssim)
 
     # ---- Dates ----
-    dates = load_dates(args.dates, pipeline)
+    dates, strips = load_dates(args.dates, pipeline)
     if args.added and args.added.exists():
         dates.update({n: item_date(i) for n, i in json.loads(args.added.read_text()).items()})
-    strips = [n for n in sorted(dates) if int(n[1:]) < 100]
     manifest["dates"] = {
         "mosaic": [{"scene": n, "date": dates[n]} for n in strips],
         "candidates": [{"scene": c, "date": dates.get(c)} for c in manifest["candidates"]],

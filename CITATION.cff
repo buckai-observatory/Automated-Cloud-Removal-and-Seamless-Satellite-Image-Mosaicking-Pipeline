@@ -21,6 +21,7 @@ authors:
     given-names: Chi-Chuan
   - family-names: Moortgat
     given-names: Joachim
+    orcid: "https://orcid.org/0000-0002-0259-3597"
 preferred-citation:
   type: article
   title: "A novel approach to automated cloud removal and seamless multisensor satellite image mosaicking"
